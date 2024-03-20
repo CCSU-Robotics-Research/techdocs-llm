@@ -9,6 +9,6 @@ FFmpeg - Latest Version https://ffmpeg.org
 
 Install FFmpeg using the link above
 
-```pip install -r``` - to install program dependanices
+```pip install -r requirements.txt``` - to install program dependanices
 
 run ```python main.py``` - to run the CLI
