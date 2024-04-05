@@ -1,22 +1,10 @@
 # Ignore all files inside the input, temp, and output folders, but keep folders themselves
 /input/*
+!input/.gitkeep 
 /temp/*
+!temp/.gitkeep 
 /output/*
-!/input/
-!/temp/
-!/output/
-
-
-
-
-
-
-
-
-
-
-
-
+!output/.gitkeep 
 
 ##Github Python Defaults
 

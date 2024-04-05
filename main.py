@@ -1,5 +1,6 @@
 # Main Runner/CLI
 import os
+from transcribe import transcribe
 from processVideo import process_video
 
 def main():
@@ -12,8 +13,9 @@ def main():
         return
 
     print(f"Starting to process '{input_video_path}' located at '{full_input_path}'.")
-    process_video(full_input_path)
+    audio_path, video_HQ_path, video_LQ_path, jpg_frames_path = process_video(full_input_path)
     print(f"Audio and video transcode complete.")
+    transcribe(audio_path)
 
 if __name__ == "__main__":
     main()
