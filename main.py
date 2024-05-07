@@ -16,9 +16,9 @@ def main():
     print(f"Starting to process '{input_video_path}' located at '{full_input_path}'.")
     audio_path, video_HQ_path, video_LQ_path, jpg_frames_path = process_video(full_input_path)
     print(f"Audio and video transcode complete.")
-    transcribe(audio_path)
+    
 
-    markdown_path = "" #pass the path of the .md file here
+    markdown_path = transcribe(audio_path) #pass the path of the .md file here
     
 
     print(f"Generating Page....")
