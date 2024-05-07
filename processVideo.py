@@ -68,8 +68,8 @@ def process_video(input_video_path):
     #video_LQ_thread = threading.Thread(target=transcode_video_LQ, args=(input_video_path, output_directory, base_filename))
     #threads.append(video_LQ_thread)
 
-    #frames_thread = threading.Thread(target=extract_frames, args=(input_video_path, output_directory, base_filename))
-    #threads.append(frames_thread)
+    frames_thread = threading.Thread(target=extract_frames, args=(input_video_path, output_directory, base_filename))
+    threads.append(frames_thread)
 
     # Start all threads
     for thread in threads:
