@@ -43,7 +43,8 @@ def extract_frames(input_video_path, output_directory, base_filename):
     (
         ffmpeg
         .input(input_video_path)
-        .output(os.path.join(jpg_output_directory, "%d.jpg"), vf="fps=5")
+        .filter("fps", fps=1) # Extract frames at 1 FPS
+        .output(os.path.join(jpg_output_directory, "%d.jpg"))
         .run()
     )
     return jpg_output_directory
