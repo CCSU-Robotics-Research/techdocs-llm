@@ -78,7 +78,7 @@ def transcribe(audio_file_path):
         },
         {
             "role": "user",
-            "content": "Now please add placeholder text wrapped in brackets [] where images from the source video of this demonstration should be added to these instructions to provide visual reference. The placeholder text should describe what the content of the image should show, relevant to the instruciton(s) it corresponds to. If multiple images are required per instruction, the placeholder text for each image is in its own brackets."
+            "content": "Now please add placeholder text wrapped in ![]() markdown image syntax where images from the source video of this demonstration should be added to these instructions to provide visual reference. The placeholder text should describe what the content of the image should show, relevant to the instruction(s) it corresponds to. If multiple images are required per instruction, each image placeholder should be on its own line."
         }
     ]
 
@@ -92,8 +92,7 @@ def transcribe(audio_file_path):
         f.write(response.choices[0].message.content)
         print("Transcription saved to:", output_file_path)
 
-    for choice in enumerate(response.choices):
-        print("choice " + i + ": " + choice.message.content)
-
+    for i, choice in enumerate(response.choices):
+        print(f"choice {i}: {choice.message.content}")
 
     return output_file_path

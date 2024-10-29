@@ -1,5 +1,6 @@
 import markdown
 import os
+import re
 
 
 def generate_page(markdown_path):
@@ -9,6 +10,24 @@ def generate_page(markdown_path):
     # Read the Markdown content
     with open(markdown_path, 'r') as file:
         markdown_content = file.read()
+
+    # Initialize counter for image numbering
+    image_counter = 1
+
+    # Function to replace with numbered placeholders
+    def numbered_replacement(match):
+        nonlocal image_counter
+        alt_text = match.group(1)
+        placeholder = f'image_{image_counter}.jpg'
+        image_counter += 1
+        return f'<img src="{placeholder}" alt="{alt_text}" class="border-2 border-gray-300 rounded-lg my-4" style="max-width: 100%; height: auto;">'
+
+    # Replace image placeholders with numbered HTML img tags
+    markdown_content = re.sub(
+        r'!\[(.*?)\]\(.*?\)',
+        numbered_replacement,
+        markdown_content
+    )
 
     # Convert Markdown content to HTML
     html_content = markdown.markdown(markdown_content)
