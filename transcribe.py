@@ -92,7 +92,7 @@ def transcribe(audio_file_path):
         f.write(response.choices[0].message.content)
         print("Transcription saved to:", output_file_path)
 
-    for i, choice in enumerate(response.choices):
-        print(f"choice {i}: {choice.message.content}")
+    #for i, choice in enumerate(response.choices):
+    #    print(f"choice {i}: {choice.message.content}")
 
     return output_file_path
