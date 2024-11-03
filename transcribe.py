@@ -90,9 +90,7 @@ def transcribe(audio_file_path):
     output_file_path = audio_file_path.replace('_transcription.txt', '_workdocs.md')
     with open(output_file_path, "w") as f:
         f.write(response.choices[0].message.content)
-        print("Transcription saved to:", output_file_path)
+        print("Markdown saved to:", output_file_path)
 
-    #for i, choice in enumerate(response.choices):
-    #    print(f"choice {i}: {choice.message.content}")
 
     return output_file_path
