@@ -36,14 +36,15 @@ def transcode_video_LQ(input_video_path, output_directory, base_filename):
     )
     return video_stream_output_path
 
-# Create a jpg stream @ 5fps
+# Create a jpg stream @ 1fps
 def extract_frames(input_video_path, output_directory, base_filename):
     jpg_output_directory = os.path.join(output_directory, f"{base_filename}_jpg_frames")
     os.makedirs(jpg_output_directory, exist_ok=True)
     (
         ffmpeg
         .input(input_video_path)
-        .output(os.path.join(jpg_output_directory, "%d.jpg"), vf="fps=5")
+        .filter("fps", fps=1) # Extract frames at 1 FPS
+        .output(os.path.join(jpg_output_directory, "%d.jpg"))
         .run()
     )
     return jpg_output_directory
