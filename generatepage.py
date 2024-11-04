@@ -17,14 +17,15 @@ def generate_page(markdown_path):
     # Function to replace with numbered placeholders
     def numbered_replacement(match):
         nonlocal image_counter
-        alt_text = match.group(1)
-        placeholder = f'image_{image_counter}.jpg'
+        alt_text = match.group(1) or f"Image {image_counter} - No description provided"  # Fallback text if alt is empty
+        placeholder = f'frame_{image_counter}.jpg'
         image_counter += 1
         return f'<img src="{placeholder}" alt="{alt_text}" class="border-2 border-gray-300 rounded-lg my-4" style="max-width: 100%; height: auto;">'
 
     # Replace image placeholders with numbered HTML img tags
+    # Updated regex to better handle various markdown image formats
     markdown_content = re.sub(
-        r'!\[(.*?)\]\(.*?\)',
+        r'!\[(.*?)\](?:\((.*?)\))?',  # Matches both ![alt]() and ![alt](url)
         numbered_replacement,
         markdown_content
     )
