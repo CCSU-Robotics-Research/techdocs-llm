@@ -16,7 +16,7 @@ def transcribe(audio_file_path):
     #     f.write(transcription.text)
     #     print("Transcription saved to:", output_file_path)
 
-    # split file into 10-min segments
+    # Split file into 10-min segments
     audio_file = AudioSegment.from_mp3(audio_file_path)
     ten_minutes = 10 * 60 * 1000
     segments = audio_file[::ten_minutes]
@@ -30,7 +30,7 @@ def transcribe(audio_file_path):
         }
     ]
 
-    # transcribe each segment and add it to the full transcription
+    # Transcribe each segment and add it to the full transcription
     previous_transcription = ""
     full_transcription = ""
 
@@ -44,24 +44,23 @@ def transcribe(audio_file_path):
                                                                         response_format="text")
             full_transcription += previous_transcription
 
-    # add full transcription to gpt-4 message and send for corrections
-    llm_messages.append({
-        "role": "user",
-        "content": full_transcription
-    })
+    # Add full transcription to gpt-4 message and send for corrections
+    # llm_messages.append({
+    #     "role": "user",
+    #     "content": full_transcription
+    # })
+    #
+    # response = client.chat.completions.create(
+    #     model="gpt-4-turbo-preview",
+    #     messages=llm_messages
+    # )
 
-    response = client.chat.completions.create(
-        model="gpt-4-turbo-preview",
-        messages=llm_messages
-    )
-
-    output_file_path = audio_file_path.replace('.mp3', '_transcription.txt')
+    output_file_path = audio_file_path.replace('_audio.mp3', '_transcription.txt')
     with open(output_file_path, "w") as f:
-        f.write(response.choices[0].message.content)
+        f.write(full_transcription)
         print("Transcription saved to:", output_file_path)
 
     # Turn transcription into work documentation
-
     system_prompt = "You are a lab technician in an industrial robotics research lab working with ABB robots. Your job is to create work documentation based on transcriptions of video tutorials recorded in the lab. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5. Work documentation should be created using the markdown language."
     llm_messages = [
         {
@@ -74,7 +73,7 @@ def transcribe(audio_file_path):
         },
         {
             "role": "user",
-            "content": response.choices[0].message.content
+            "content": full_transcription
         },
         {
             "role": "user",
@@ -87,10 +86,10 @@ def transcribe(audio_file_path):
         messages=llm_messages
     )
 
-    output_file_path = audio_file_path.replace('_transcription.txt', '_workdocs.md')
+    # Save work instructions as a markdown file
+    output_file_path = audio_file_path.replace('_audio.mp3', '_workdocs.md')
     with open(output_file_path, "w") as f:
         f.write(response.choices[0].message.content)
         print("Markdown saved to:", output_file_path)
-
 
     return output_file_path

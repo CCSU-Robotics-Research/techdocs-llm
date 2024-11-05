@@ -2,7 +2,7 @@
 import os
 from transcribe import transcribe
 from processVideo import process_video
-from generatepage import generate_page
+from generatePage import generate_page
 
 def main():
     input_directory = "input"
@@ -14,12 +14,10 @@ def main():
         return
 
     print(f"Starting to process '{input_video_path}' located at '{full_input_path}'.")
-    audio_path, video_HQ_path, video_LQ_path, jpg_frames_path = process_video(full_input_path)
+    audio_path, video_hq_path, video_lq_path, jpg_frames_path = process_video(full_input_path)
     print(f"Audio and video transcode complete.")
-    
 
     markdown_path = transcribe(audio_path) #pass the path of the .md file here
-    
 
     print(f"Generating Page....")
     html_file = generate_page(markdown_path)

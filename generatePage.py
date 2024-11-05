@@ -2,7 +2,6 @@ import markdown
 import os
 import re
 
-
 def generate_page(markdown_path):
     if not os.path.exists(markdown_path):
         raise FileNotFoundError(f"File '{markdown_path}' not found")
