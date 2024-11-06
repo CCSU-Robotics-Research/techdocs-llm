@@ -1,8 +1,10 @@
 from openai import OpenAI
 from pydub import AudioSegment
 
+client = OpenAI() # Instance to access OpenAI API
+
+# Transcribes an audio file into a transcription with timestamps and generates a markdown file
 def transcribe(audio_file_path):
-    client = OpenAI()
     #
     # with open(audio_file_path, "rb") as audio_file:
     #     transcription = client.audio.transcriptions.create(
@@ -100,4 +102,63 @@ def transcribe(audio_file_path):
         f.write(response.choices[0].message.content)
         print("Markdown saved to:", output_file_path)
 
-    return output_file_path
+    # Return the HTML file and the transcription with timestamps
+    return output_file_path, full_transcription
+
+# Fetches the correct time intervals for image extraction using the generated HTML file with img placeholders and the transcription with timestamps.
+def obtain_time_intervals(html_file, transcription):
+
+    # Read the HTML file with alt text into a string
+    html_contents = ""
+    with open(html_file, "r") as file:
+        html_contents = file.read()
+
+    prompt = """
+    You are analyzing a transcript of a robotics lab video with timestamps, as well as an HTML file containing placeholder image tags with descriptive alt text. Each image represents a keyframe that should be captured at a specific interval in the video.
+
+    Your task:
+    - Match each image tag’s alt text with the relevant section(s) of the transcript.
+    - Identify the best start and end timestamps that correspond to each alt text description.
+    - Return each matched time interval in the format: [frame_id] start-end | "alt text", where `frame_id` is the order of the image tag in the HTML file (1, 2, 3, etc.), `start-end` represents the timestamp range, and '"alt text"' is the corresponding alt text attribute from the img tag in the HTML file.
+
+    Example Format:
+    [frame_1] 00:12.00-00:15.00 | "Sample alt text"
+    [frame_2] 01:45.00-01:48.00 | "Sample alt text"
+
+    Do not include any additional text or explanations.
+    """
+
+    # Construct messages with file contents included
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": f"Transcript:\n{transcription}"},
+        {"role": "user", "content": f"HTML with image tags:\n{html_contents}"}
+    ]
+
+    # Call OpenAI API with the constructed messages
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=messages
+    )
+
+    # Process the response into an array of tuples to prepare for image extraction
+    data = response.choices[0].message.content.split("\n")
+    formatted_intervals = [] # Array to store the formatted tuples
+
+    for entry in data:
+        # Split the entry by ' | ' to separate the time interval and description
+        info = entry.split(" | ")
+
+        # Extract frame name from '[frame_1]'
+        frame_name = info[0].split("]")[0][1:]
+
+        # Extract start and end times from interval range
+        time_range = info[0].split(" ")[1]
+        start_time, end_time = map(float, time_range.split("-"))
+
+        # Create the tuple
+        formatted_tuple = (frame_name, info[1].strip('"'), start_time, end_time)
+        formatted_intervals.append(formatted_tuple)
+
+    # Return the array of tuples
+    return formatted_intervals
