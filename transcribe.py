@@ -21,15 +21,6 @@ def transcribe(audio_file_path):
     ten_minutes = 10 * 60 * 1000
     segments = audio_file[::ten_minutes]
 
-    # Initial prompting
-    system_prompt = "You are a lab technician in an industrial robotics research lab working with ABB robots. Your job is to correct any spelling mistakes in the transcribed text. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5. Only add necessary punctuation such as periods, commas, and capitalization, and use only the provided context."
-    llm_messages = [
-        {
-            "role": "system",
-            "content": system_prompt
-        }
-    ]
-
     # Transcribe each segment with timestamps and add it to the full transcription
     full_transcription = ""
 
@@ -53,12 +44,18 @@ def transcribe(audio_file_path):
             else:
                 print("Unable to access JSON data for segments.") # Error reading the API response
 
-    # Add full transcription to gpt-4 message and send for corrections
-    # llm_messages.append({
-    #     "role": "user",
-    #     "content": full_transcription
-    # })
-    #
+    # (OMITTED) Add full transcription to gpt-4 message and send for corrections
+    # system_prompt = "You are a lab technician in an industrial robotics research lab working with ABB robots. Your job is to correct any spelling mistakes in the transcribed text. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5. Only add necessary punctuation such as periods, commas, and capitalization, and use only the provided context."
+    # llm_messages = [
+    #     {
+    #         "role": "system",
+    #         "content": system_prompt
+    #     },
+    #     {
+    #         "role": "user",
+    #         "content": full_transcription
+    #     }
+    # ]
     # response = client.chat.completions.create(
     #     model="gpt-4-turbo-preview",
     #     messages=llm_messages
