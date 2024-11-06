@@ -30,19 +30,28 @@ def transcribe(audio_file_path):
         }
     ]
 
-    # Transcribe each segment and add it to the full transcription
-    previous_transcription = ""
+    # Transcribe each segment with timestamps and add it to the full transcription
     full_transcription = ""
 
+    # Process each piece of audio
     for i, segment in enumerate(segments):
         with open("temp/segment_%s.mp3" % i, "wb") as f:
             segment.export(f, format="mp3")
             audio_file = open("temp/segment_%s.mp3" % i, "rb")
-            previous_transcription = client.audio.transcriptions.create(file=audio_file,
-                                                                        model="whisper-1",
-                                                                        prompt=previous_transcription,
-                                                                        response_format="text")
-            full_transcription += previous_transcription
+            response = client.audio.transcriptions.create(file=audio_file,
+                                                          model="whisper-1",
+                                                          response_format="verbose_json",
+                                                          timestamp_granularities=["segment"])
+
+            # Correct each transcription segment's timestamps and add the segment to the transcription
+            if response.segments:
+                for item in response.segments:
+                    start_time = item.start + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
+                    end_time = item.end + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
+                    text = item.text.strip()
+                    full_transcription += f"[{start_time:.2f}-{end_time:.2f}] {text}\n"
+            else:
+                print("Unable to access JSON data for segments.") # Error reading the API response
 
     # Add full transcription to gpt-4 message and send for corrections
     # llm_messages.append({
@@ -55,12 +64,13 @@ def transcribe(audio_file_path):
     #     messages=llm_messages
     # )
 
+    # Save transcription with timestamps as a .txt file
     output_file_path = audio_file_path.replace('_audio.mp3', '_transcription.txt')
     with open(output_file_path, "w") as f:
         f.write(full_transcription)
         print("Transcription saved to:", output_file_path)
 
-    # Turn transcription into work documentation
+    # Turn transcription into work documentation. First create messages to send to OpenAI API
     system_prompt = "You are a lab technician in an industrial robotics research lab working with ABB robots. Your job is to create work documentation based on transcriptions of video tutorials recorded in the lab. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5. Work documentation should be created using the markdown language."
     llm_messages = [
         {
@@ -81,12 +91,13 @@ def transcribe(audio_file_path):
         }
     ]
 
+    # Send the API request
     response = client.chat.completions.create(
         model="gpt-4-turbo-preview",
         messages=llm_messages
     )
 
-    # Save work instructions as a markdown file
+    # Save the created work instructions as a markdown file
     output_file_path = audio_file_path.replace('_audio.mp3', '_workdocs.md')
     with open(output_file_path, "w") as f:
         f.write(response.choices[0].message.content)
