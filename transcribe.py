@@ -106,7 +106,7 @@ def transcribe(audio_file_path):
     return output_file_path, full_transcription
 
 # Fetches the correct time intervals for image extraction using the generated HTML file with img placeholders and the transcription with timestamps.
-def obtain_time_intervals(html_file, transcription):
+def obtain_time_intervals(html_file, transcription, base_filename, output_directory):
 
     # Read the HTML file with alt text into a string
     html_contents = ""
@@ -119,11 +119,11 @@ def obtain_time_intervals(html_file, transcription):
     Your task:
     - Match each image tag’s alt text with the relevant section(s) of the transcript.
     - Identify the best start and end timestamps that correspond to each alt text description.
-    - Return each matched time interval in the format: [frame_id] start-end | "alt text", where `frame_id` is the order of the image tag in the HTML file (1, 2, 3, etc.), `start-end` represents the timestamp range, and '"alt text"' is the corresponding alt text attribute from the img tag in the HTML file.
+    - Return each matched time interval in the format: [frame_id] start-end | "alt text", where `frame_id` is the order of the image tag in the HTML file (1, 2, 3, etc.), `start-end` represents the timestamp range (each are in seconds, no colon formatting), and '"alt text"' is the corresponding alt text attribute from the img tag in the HTML file.
 
     Example Format:
-    [frame_1] 00:12.00-00:15.00 | "Sample alt text"
-    [frame_2] 01:45.00-01:48.00 | "Sample alt text"
+    [frame_1] 12.00-15.00 | "Sample alt text"
+    [frame_2] 45.00-48.00 | "Sample alt text"
 
     Do not include any additional text or explanations.
     """
@@ -159,6 +159,17 @@ def obtain_time_intervals(html_file, transcription):
         # Create the tuple
         formatted_tuple = (frame_name, info[1].strip('"'), start_time, end_time)
         formatted_intervals.append(formatted_tuple)
+
+    # Validate each interval (end should be greater than start)
+    for interval in formatted_intervals:
+        while interval[2] >= interval[3]:
+            interval[3] += 1 # If end is less than start, increment the end
+
+    # Save the captured time intervals in a .txt file as a record
+    output_file_path = output_directory + "/" + base_filename + "_keyframe_time_intervals.txt"
+    with open(output_file_path, "w") as f:
+        f.write(response.choices[0].message.content)
+        print("Time interval data saved to:", output_file_path)
 
     # Return the array of tuples
     return formatted_intervals
