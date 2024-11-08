@@ -35,23 +35,28 @@ def main():
     print("Page with keyframe placeholders saved to: " + html_file)
 
     # Send the HTML file and transcription (with timestamps) to OpenAI API to find correct time intervals for image extraction
-    print("Beginning keyframe extraction...")
+    print("Beginning interval frame extraction...")
     keyframe_time_intervals = obtain_time_intervals(html_file, transcription, base_filename, temp_output_directory)
 
-    # Extract images from the video at the obtained time intervals
+    # Extract images from the video at the obtained time intervals and capture the directory paths where frames are stored for each interval
     interval_output_directories = interval_frame_extraction(full_input_path, temp_output_directory, base_filename, keyframe_time_intervals)
 
-    # Temporary, this will be deleted
-    for output in interval_output_directories:
-        print(output)
+    # Capture alt texts into a single array
+    alt_texts = []
+    for (_, alt, _, _) in keyframe_time_intervals:
+        alt_texts.append(alt)
 
-    print("Keyframe extraction complete.")
+    print("Interval frame extraction complete.")
 
     # TODO: From each set of images, using the corresponding img placeholder, select the best keyframe and insert it into the HTML file
+    # NOTE: Each entry in the alt_texts corresponds to the entry at the same index in interval_output_directories
 
-    # Processing complete.
-    # print("Page successfully generated.")
-    # print("View the Docs with keyframes here: " + html_file)
+    # write code here
+
+    # Video processing complete.
+    print("Video processing complete.")
+    print("Page successfully generated.")
+    print("View the Docs with keyframes here: " + html_file)
 
 if __name__ == "__main__":
     main()
