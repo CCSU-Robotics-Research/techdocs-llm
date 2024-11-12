@@ -22,7 +22,8 @@ def main():
     # Begin processing the video. First transcode the video and transcribe the audio with timestamps included
     print(f"Starting to process '{input_video_path}' located at '{full_input_path}'.")
     base_filename = os.path.splitext(os.path.basename(input_video_path))[0]
-    temp_output_directory = os.path.join("temp", f"{base_filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
     audio_path, video_hq_path, video_lq_path, _ = process_video(full_input_path, base_filename, temp_output_directory)
     print(f"Audio and video transcode complete.")
 
