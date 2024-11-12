@@ -51,7 +51,7 @@ def main():
 
     # TODO: From each set of images, using the corresponding img placeholder, select the best keyframe and insert it into the HTML file
     # NOTE: Each entry in the alt_texts corresponds to the entry at the same index in interval_output_directories
-
+    image_analysis(alt_texts, interval_output_directories)
     # write code here
 
     # Video processing complete.
