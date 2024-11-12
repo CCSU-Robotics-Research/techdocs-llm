@@ -20,7 +20,7 @@ def image_analysis(alt_texts, interval_output_directories):
         print("Error: The number of directories does not match the number of alt texts.")
         return
 
-    # Process each subdirectory at interval_otput_directories
+    # Process each subdirectory at interval_output_directories
     for index, directory in enumerate(interval_output_directories):
         alt_text = alt_texts[index]
         print(f"Processing directory: {directory} with alt text: '{alt_text}'")

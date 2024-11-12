@@ -67,7 +67,7 @@ def transcribe(audio_file_path):
     output_file_path = audio_file_path.replace('_audio.mp3', '_transcription.txt')
     with open(output_file_path, "w") as f:
         f.write(full_transcription)
-        print("Transcription saved to:", output_file_path)
+        print("Transcription saved to: " + output_file_path)
 
     # Turn transcription into work documentation. First create messages to send to OpenAI API
     system_prompt = "You are a lab technician in an industrial robotics research lab working with ABB robots. Your job is to create work documentation based on transcriptions of video tutorials recorded in the lab. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5. Work documentation should be created using the markdown language."
@@ -100,7 +100,7 @@ def transcribe(audio_file_path):
     output_file_path = audio_file_path.replace('_audio.mp3', '_workdocs.md')
     with open(output_file_path, "w") as f:
         f.write(response.choices[0].message.content)
-        print("Markdown saved to:", output_file_path)
+        print("Markdown saved to: ", output_file_path)
 
     # Return the HTML file and the transcription with timestamps
     return output_file_path, full_transcription
@@ -161,15 +161,18 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
         formatted_intervals.append(formatted_tuple)
 
     # Validate each interval (end should be greater than start)
-    for interval in formatted_intervals:
-        while interval[2] >= interval[3]:
-            interval[3] += 1 # If end is less than start, increment the end
+    for i, (frame, description, start, end) in enumerate(formatted_intervals):
+        # Swap start and end if end is less than start
+        if end < start:
+            start, end = end, start  # Swap the times
+        # Replace the tuple in the list with the corrected tuple
+        formatted_intervals[i] = (frame, description, start, end)
 
     # Save the captured time intervals in a .txt file as a record
     output_file_path = output_directory + "/" + base_filename + "_keyframe_time_intervals.txt"
     with open(output_file_path, "w") as f:
         f.write(response.choices[0].message.content)
-        print("Time interval data saved to:", output_file_path)
+        print("Time interval data saved to: " + output_file_path + "\n")
 
     # Return the array of tuples
     return formatted_intervals

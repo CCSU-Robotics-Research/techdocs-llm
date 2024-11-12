@@ -67,7 +67,6 @@ def interval_frame_extraction(input_video_path, output_directory, base_filename,
         )
         jpg_directories.append(jpg_output_directory)
 
-    print ("Interval frame extraction complete.")
     return jpg_directories
 
 def process_video(input_video_path, base_filename, output_directory):
@@ -102,8 +101,6 @@ def process_video(input_video_path, base_filename, output_directory):
     # Wait for all threads to complete
     for thread in threads:
         thread.join()
-
-    print("Processing complete.")
 
     # Collect and return file names
     audio_output_path = os.path.join(output_directory, f"{base_filename}_audio.mp3")

@@ -26,7 +26,7 @@ def main():
     date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
     audio_path, video_hq_path, video_lq_path, _ = process_video(full_input_path, base_filename, temp_output_directory)
-    print(f"Audio and video transcode complete.")
+    print("Audio and video transcode complete.\n")
 
     # Obtain the markdown and transcription files
     markdown_path, transcription = transcribe(audio_path)
@@ -34,7 +34,7 @@ def main():
     # Generate the HTML page with keyframe placeholders
     print(f"Generating Page....")
     html_file = generate_page(markdown_path)
-    print("Page with keyframe placeholders saved to: " + html_file)
+    print("Page with keyframe placeholders saved to: " + html_file + "\n")
 
     # Send the HTML file and transcription (with timestamps) to OpenAI API to find correct time intervals for image extraction
     print("Beginning interval frame extraction...")
@@ -48,12 +48,12 @@ def main():
     for (_, alt, _, _) in keyframe_time_intervals:
         alt_texts.append(alt)
 
-    print("Interval frame extraction complete.")
+    print("Interval frame extraction complete.\n")
 
-    # TODO: From each set of images, using the corresponding img placeholder, select the best keyframe and insert it into the HTML file
-    # NOTE: Each entry in the alt_texts corresponds to the entry at the same index in interval_output_directories
+    # From each set of images, using the corresponding img placeholder, select the best keyframe and insert it into the HTML file
+    print("Beginning keyframe selection and insertion...")
     image_analysis(alt_texts, interval_output_directories)
-    # write code here
+    print("Keyframe insertion complete.\n")
 
     # Video processing complete.
     print("Video processing complete.")
