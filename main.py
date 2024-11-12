@@ -6,6 +6,7 @@ from processVideo import process_video
 from processVideo import interval_frame_extraction
 from datetime import datetime
 from generatePage import generate_page
+from imageAnalysis import image_analysis
 
 def main():
 
