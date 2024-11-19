@@ -2,3 +2,9 @@ ffmpeg-python
 openai
 pydub
 markdown
+tkinter
+tkinterdnd2
+
+# Install the following
+#tkinter
+#tkinterdnd2
