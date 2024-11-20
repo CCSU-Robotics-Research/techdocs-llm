@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
+from main import main
 
 class ModernRoundedButton(tk.Canvas):
     def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049"):
@@ -50,9 +51,11 @@ def browse_files():
     file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
     if file_path:
         print(f"Selected File: {file_path}")
+        main(event.data[event.data.rfind("/")+1:])
 
 def on_drop(event):
     print(f"Dropped File: {event.data}")
+    main(event.data[event.data.rfind("/")+1:])
 
 # Main Tkinter window
 root = TkinterDnD.Tk()

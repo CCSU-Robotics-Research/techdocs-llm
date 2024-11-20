@@ -79,4 +79,4 @@ def generate_page(markdown_path):
     return output_path
 
 # Example usage
-generate_page("temp/test/example.md")
+# generate_page("temp/test/example.md")

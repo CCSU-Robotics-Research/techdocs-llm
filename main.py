@@ -8,11 +8,10 @@ from datetime import datetime
 from generatePage import generate_page
 from imageAnalysis import image_analysis
 
-def main():
+def main(input_video_path):
 
     # User input for video to process
     input_directory = "input"
-    input_video_path = input("Enter the name of the input video file (located in '/input' directory): ")
     full_input_path = os.path.join(input_directory, input_video_path)
 
     # Check if the specified video exists
