@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -51,11 +52,17 @@ def browse_files():
     file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
     if file_path:
         print(f"Selected File: {file_path}")
-        main(event.data[event.data.rfind("/")+1:])
+        main(file_path[file_path.rfind("/")+1:])
 
 def on_drop(event):
-    print(f"Dropped File: {event.data}")
-    main(event.data[event.data.rfind("/")+1:])
+    file_path = event.data.strip("{}")
+    _, file_extension = os.path.splitext(file_path)
+
+    if file_extension.lower() not in {".mov", ".mp4", ".avi", ".mkv"}:
+        print("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, .mkv")
+    else:
+        print(f"Dropped File: {file_path}")
+        print(file_path[file_path.rfind("/")+1:])
 
 # Main Tkinter window
 root = TkinterDnD.Tk()
