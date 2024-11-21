@@ -72,7 +72,7 @@ def display_main_page(root):
             show_error_message("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, and .mkv.")
         else:
             print(f"Uploaded File: {file_path}")
-            show_confirmation_message(file_path) # TODO: Create a page confirming this is the file to be processed with a yes button and a back button
+            show_confirmation_message(file_path)
 
     def show_error_message(error_message):
         # Replace drag-and-drop box with error message
