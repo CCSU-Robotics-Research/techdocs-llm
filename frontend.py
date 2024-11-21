@@ -5,14 +5,14 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 from main import main
 
 class ModernRoundedButton(tk.Canvas):
-    def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049"):
-        super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat")
+    def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
+        super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat", bg=bg)
         self.command = command
         self.color = color
         self.hover_color = hover_color
         self.radius = radius
         self.text = text
-        
+
         # Wait for the widget to be fully created before drawing
         self.bind("<Configure>", self._on_configure)
         self.drawn = False
