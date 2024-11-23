@@ -118,6 +118,8 @@ def display_main_page(root):
     def process_video(file_path):
         print(f"Processing Video from GUI: {file_path}")
         # TODO: Add video processing logic
+        # main(file_path[file_path.rfind("/") + 1:]) --> UNCOMMENTING THIS WILL RUN THE VIDEO PROCESSING
+
         # TODO: Add subsequent pages for video processing
 
         # For now, just go back to the main page
