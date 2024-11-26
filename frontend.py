@@ -67,11 +67,13 @@ def display_main_page(root):
         _, file_extension = os.path.splitext(file_path)
 
         if not file_path:
+            print("LOG: File Explorer opened, no file selected")
             show_error_message("You must select a video file to process.")
         elif file_extension.lower() not in valid_extensions:
+            print(f"LOG: Uploaded Bad File: {file_path}")
             show_error_message("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, and .mkv.")
         else:
-            print(f"Uploaded File: {file_path}")
+            print(f"LOG: Uploaded Video File: {file_path}")
             show_confirmation_message(file_path)
 
     def show_error_message(error_message):
@@ -116,17 +118,17 @@ def display_main_page(root):
         process_button.grid(row=0, column=1, padx=10)
 
     def process_video(file_path):
-        print(f"Processing Video from GUI: {file_path}")
-        # TODO: Add video processing logic
-        # main(file_path[file_path.rfind("/") + 1:]) --> UNCOMMENTING THIS WILL RUN THE VIDEO PROCESSING
+        print(f"LOG: Processing Video from GUI: {file_path}")
+        main(file_path[file_path.rfind("/") + 1:]) # TODO: Fix code so that main() is the GUI driver instead of frontend.py (i.e., code organization)
 
-        # TODO: Add subsequent pages for video processing
+        # TODO: Add a buffering page(s) for video processing
 
         # For now, just go back to the main page
         reset_main_page()
 
     def reset_main_page():
         # Clear the main frame and reinitialize the main page
+        print("LOG: Reverting to main page")
         for widget in main_frame.winfo_children():
             widget.destroy()
         initialize_main_page()
