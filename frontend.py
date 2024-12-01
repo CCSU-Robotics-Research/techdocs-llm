@@ -1,9 +1,12 @@
+# frontend.py contains all the functions that handle the GUI, using the Tkinter library.
+
 import os
 import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
-from main import main
+from backend import generate_documentation_from_video
 
+# Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
     def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
         super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat", bg=bg)
@@ -16,7 +19,7 @@ class ModernRoundedButton(tk.Canvas):
         # Wait for the widget to be fully created before drawing
         self.bind("<Configure>", self._on_configure)
         self.drawn = False
-        
+
         self.bind("<Button-1>", self.on_click)
         self.bind("<Enter>", self.on_hover)
         self.bind("<Leave>", self.on_leave)
@@ -38,6 +41,8 @@ class ModernRoundedButton(tk.Canvas):
         self.create_rectangle(0, self.radius, self.winfo_width(), self.winfo_height() - self.radius, fill=color, outline=color, tags="button")
         self.create_text(self.winfo_width() / 2, self.winfo_height() / 2, text=self.text, fill="white", font=("Segoe UI", 12, "bold"), tags="button")
 
+    # Event handlers
+
     def on_click(self, event):
         if self.command:
             self.command()
@@ -48,20 +53,24 @@ class ModernRoundedButton(tk.Canvas):
     def on_leave(self, event):
         self.draw_button(self.color)
 
+# Displays the main page of the GUI
 def display_main_page(root):
+
     # Frame and state variables
     main_frame = tk.Frame(root, bg="#f4f4f9")
     main_frame.pack(fill=tk.BOTH, expand=True)
 
+    # Dialog box for uploading a video
     def browse_files():
         file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
         handle_file_upload(file_path)
 
+    # Event handler for dragging a video into the GUI
     def on_drop(event):
         file_path = event.data.strip("{}")  # Remove curly braces
         handle_file_upload(file_path)
 
-    # Validate that a file was uploaded and that the file type is correct
+    # Validate that a file was actually uploaded and that the file type is correct
     def handle_file_upload(file_path):
         valid_extensions = [".mp4", ".mov", ".avi", ".mkv"]
         _, file_extension = os.path.splitext(file_path)
@@ -76,6 +85,7 @@ def display_main_page(root):
             print(f"LOG: Uploaded Video File: {file_path}")
             show_confirmation_message(file_path)
 
+    # Error message page with a custom error message
     def show_error_message(error_message):
         # Replace drag-and-drop box with error message
         canvas_frame.pack_forget()
@@ -89,6 +99,7 @@ def display_main_page(root):
         back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=reset_main_page, width=180, height=50)
         back_button.pack(pady=10)
 
+    # Page to confirm from user that the selected video is what they want processed
     def show_confirmation_message(file_path):
         # Extract filename from file path
         filename = file_path.split("/")[-1]
@@ -117,22 +128,26 @@ def display_main_page(root):
         process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
 
+    # Communicate with backend.py to initiate video processing
     def process_video(file_path):
         print(f"LOG: Processing Video from GUI: {file_path}")
-        main(file_path[file_path.rfind("/") + 1:]) # TODO: Fix code so that main() is the GUI driver instead of frontend.py (i.e., code organization)
+        generate_documentation_from_video(input_video_path=file_path[file_path.rfind("/") +1:], full_input_path=file_path) # Backend driver
 
-        # TODO: Add a buffering page(s) for video processing
+        # TODO: Add a buffering page(s) for video processing, multithreading most likely required
 
-        # For now, just go back to the main page
-        reset_main_page()
+        # TODO: Show an error message if the video fails to process
 
+        # TODO: Once the video is finished processing, display a success page
+        reset_main_page() # For now, just go back to the main page immediately
+
+    # Clear the main frame and reinitialize the main page
     def reset_main_page():
-        # Clear the main frame and reinitialize the main page
         print("LOG: Reverting to main page")
         for widget in main_frame.winfo_children():
             widget.destroy()
         initialize_main_page()
 
+    # Construct the main page
     def initialize_main_page():
         # Header Section
         header = tk.Label(main_frame, text="Video to Instruction Manual", font=("Segoe UI", 18, "bold"), bg="#4CAF50",
@@ -172,15 +187,17 @@ def display_main_page(root):
                           bg="#f4f4f9", fg="#999999", pady=10)
         footer.pack(side=tk.BOTTOM, fill=tk.X)
 
-    # Initialize the main page
-    initialize_main_page()
+    initialize_main_page() # Create a main page to be displayed to the user
 
-# Main Tkinter window
-root = TkinterDnD.Tk()
-root.title("Instruction Manual Creator")
-root.geometry("800x500")
-root.configure(bg="#f4f4f9")
+# Driver for GUI initialization, to be invoked in main.py
+def start_frontend():
 
-# Display the main page
-display_main_page(root)
-root.mainloop() # Run the Tkinter event loop
+    # Main Tkinter window
+    root = TkinterDnD.Tk()
+    root.title("Instruction Manual Creator")
+    root.geometry("800x500")
+    root.configure(bg="#f4f4f9")
+
+    # Display the main page
+    display_main_page(root)
+    root.mainloop() # Run the Tkinter event loop
