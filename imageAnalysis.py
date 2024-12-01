@@ -1,3 +1,5 @@
+# imageAnalysis.py contains functions for the final keyframe selection process from a set of intervals of images. Image analysis uses OpenAI API.
+
 import base64
 import glob
 import os
@@ -7,12 +9,15 @@ from openai import OpenAI
 
 client = OpenAI()
 
+# Encodes an image into a base64 string
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
+# Analyses intervals of images, comparing them against their corresponding alt text placeholders, and selects the best keyframes from each interval
 def image_analysis(alt_texts, interval_output_directories):
-    
+
+    # Selected keyframes will be saved here
     output_dir = "output"
 
     # Ensure the number of directories matches the number of prompts
@@ -31,14 +36,20 @@ def image_analysis(alt_texts, interval_output_directories):
             print(f"No .jpg files found in directory {directory}")
             continue
 
+        # Start with all images in the directory
         remaining_images = image_paths
 
         # Select the best image in batches until only one image remains
         while len(remaining_images) > 1:
-            batches = [remaining_images[i:i + 4] for i in range(0, len(remaining_images), 4)]
-            next_round_images = []
 
+            # Divide remaining images into batches of 4
+            batches = [remaining_images[i:i + 4] for i in range(0, len(remaining_images), 4)]
+            next_round_images = [] # List to store selected images for the next round
+
+            # Process each batch
             for batch in batches:
+
+                # Encode each image in the batch to base64
                 batch_base64 = [encode_image(img) for img in batch]
 
                 # Prepare messages for the current batch with given prompt
@@ -62,7 +73,7 @@ def image_analysis(alt_texts, interval_output_directories):
                     max_tokens=300,
                 )
 
-                # Extract the choice from the response (making sure we get numbers only, not any words)
+                # Parse the response to get the choice (making sure we get numbers only, not any words)
                 choice = response.choices[0].message.content
                 match = re.search(r'\b\d+\b', choice)
                 if match:
@@ -76,7 +87,7 @@ def image_analysis(alt_texts, interval_output_directories):
             # Update for the next loop if needed
             remaining_images = next_round_images
 
-        # After the loop, there should only be one image
+        # After the loop, there should only be one image left
         if remaining_images:
             final_best_image = remaining_images[0]
             output_image_path = os.path.join(output_dir, f"frame_{index + 1}.jpg")  # Save as frame_1.jpg, frame_2.jpg, etc.

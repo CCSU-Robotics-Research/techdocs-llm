@@ -1,3 +1,5 @@
+# processVideo.py contains code for transcoding a video into audio and extracting intervals of images from a video with FFmpeg.
+
 import os
 import ffmpeg
 import threading
@@ -48,7 +50,7 @@ def extract_frames(input_video_path, output_directory, base_filename):
     )
     return jpg_output_directory
 
-# Extract frames @ 1 FPS at all intervals and return all output directories in an array
+# Extract frames @ 1 FPS at all time intervals specified, returning all output directories in an array
 def interval_frame_extraction(input_video_path, output_directory, base_filename, keyframe_time_intervals):
 
     # Output directories, to be returned at end
@@ -69,39 +71,35 @@ def interval_frame_extraction(input_video_path, output_directory, base_filename,
 
     return jpg_directories
 
+# Transcode a video into audio and generates the output directory for temporary images
 def process_video(input_video_path, base_filename, output_directory):
-    # # Get the base filename of the input video
-    # base_filename = os.path.splitext(os.path.basename(input_video_path))[0]
 
     # Create a directory for the processed files
-    # output_directory = os.path.join("temp", f"{base_filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     os.makedirs(output_directory, exist_ok=True)
 
-    # Multithread transcription
-    threads = []
+    # TODO: Replace multithreaded functions with this call
+    transcode_audio(input_video_path, output_directory, base_filename)
 
-    # Thread for transcoding video to audio
-    audio_thread = threading.Thread(target=transcode_audio, args=(input_video_path, output_directory, base_filename))
-    threads.append(audio_thread)
-
-    #video_HQ_thread = threading.Thread(target=transcode_video_HQ, args=(input_video_path, output_directory, base_filename))
-    #threads.append(video_HQ_thread)
-
-    #video_LQ_thread = threading.Thread(target=transcode_video_LQ, args=(input_video_path, output_directory, base_filename))
-    #threads.append(video_LQ_thread)
-
-    # (OMITTED) Thread for frame extraction from the whole video at 1 FPS
-    # frames_thread = threading.Thread(target=extract_frames, args=(input_video_path, output_directory, base_filename))
-    # threads.append(frames_thread)
-
-    # Start all threads
-    for thread in threads:
-        thread.start()
-
-    # Wait for all threads to complete
-    for thread in threads:
-        thread.join()
-
+    # # Multithread transcription
+    # threads = []
+    #
+    # # Thread for transcoding video to audio
+    # audio_thread = threading.Thread(target=transcode_audio, args=(input_video_path, output_directory, base_filename))
+    # threads.append(audio_thread)
+    #
+    # #video_HQ_thread = threading.Thread(target=transcode_video_HQ, args=(input_video_path, output_directory, base_filename))
+    # #threads.append(video_HQ_thread)
+    #
+    # #video_LQ_thread = threading.Thread(target=transcode_video_LQ, args=(input_video_path, output_directory, base_filename))
+    # #threads.append(video_LQ_thread)
+    #
+    # # Start all threads
+    # for thread in threads:
+    #     thread.start()
+    #
+    # # Wait for all threads to complete
+    # for thread in threads:
+    #     thread.join()
     # Collect and return file names
     audio_output_path = os.path.join(output_directory, f"{base_filename}_audio.mp3")
     video_HQ_output_path = os.path.join(output_directory, f"{base_filename}_video_HQ.mp4")

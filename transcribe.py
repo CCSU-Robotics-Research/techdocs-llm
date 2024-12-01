@@ -1,3 +1,5 @@
+# transcribe.py contains functions to generate a segmented transcription from an audio file and to find the correct time intervals in the video for image extraction.
+
 from openai import OpenAI
 from pydub import AudioSegment
 
@@ -113,6 +115,7 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
     with open(html_file, "r") as file:
         html_contents = file.read()
 
+    # Prompt to be sent to OpenAI API
     prompt = """
     You are analyzing a transcript of a robotics lab video with timestamps, as well as an HTML file containing placeholder image tags with descriptive alt text. Each image represents a keyframe that should be captured at a specific interval in the video.
 
