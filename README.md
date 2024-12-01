@@ -1,5 +1,5 @@
 # techdocs-llm
-Video -> Tech Docs utilizing various AI models for text &amp; photo/video
+Video → Tech Docs utilizing various AI models for text &amp; photo/video
 
 ## Requirements
 
@@ -9,8 +9,10 @@ FFmpeg - Latest Version https://ffmpeg.org
 
 Install FFmpeg using the link above
 
-```pip install -r requirements.txt``` - to install program dependanices
+```pip install -r requirements.txt``` - to install program dependencies. 
 
-run ```python main.py``` - to run the CLI
+To install Tkinter (required for GUI), you will need to use an external package manager (such as Homebrew) since pip might give an error. You may get a warning saying "Package tkinter is not satisfied" — if the program still runs you can safely ignore this warning. 
 
-Open AI API Key needs to be saved as an env var on your machine 
+run ```python main.py``` - to run the GUI
+
+The OpenAI API key needs to be saved as an env variable on your machine.
