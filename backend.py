@@ -12,10 +12,9 @@ from imageAnalysis import image_analysis
 # Given an input video from the GUI, process it into work instructions
 def generate_documentation_from_video(input_video_path, full_input_path):
 
-    # TODO: Change program code dependencies so any video in any directory can be processed (i.e., /input directory not required)
-    # For now, check if the specified video exists in the /input directory
+    # Ensure the input file path exists
     if not os.path.exists(full_input_path):
-        print("File not found. Please make sure the file exists in the '/input' directory.")
+        print("ERROR: File not found. Please make sure the file path is valid and try again.")
         return
 
     # Begin processing the video. First transcode the video and transcribe the audio with timestamps included
