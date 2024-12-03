@@ -16,3 +16,7 @@ If installing Tkinter gives an error, try to use the package manager built in th
 run ```python main.py``` - to run the program. The main page of the GUI should launch.
 
 The OpenAI API key needs to be saved as an env variable on your machine.
+
+## Table of Contents
+
+TODO
