@@ -3,7 +3,7 @@
 import os
 import ffmpeg
 
-# Transcode audio to CD quality .mp3
+# Transcode a video to audio file with CD quality .mp3
 def transcode_audio(input_video_path, output_directory, base_filename):
     audio_output_path = os.path.join(output_directory, f"{base_filename}_audio.mp3")
     (
@@ -36,7 +36,7 @@ def interval_frame_extraction(input_video_path, output_directory, base_filename,
     return jpg_directories
 
 # The first part of video processing: transcoding and creating the output directory
-def process_video(input_video_path, base_filename, output_directory):
+def preliminary_video_processing(input_video_path, base_filename, output_directory):
 
     # Create a directory for the processed files
     os.makedirs(output_directory, exist_ok=True)

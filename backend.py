@@ -3,14 +3,14 @@
 import os
 from transcribe import transcribe
 from transcribe import obtain_time_intervals
-from processVideo import process_video
+from processVideo import preliminary_video_processing
 from processVideo import interval_frame_extraction
 from datetime import datetime
 from generatePage import generate_page
 from imageAnalysis import image_analysis
 
 # Given an input video from the GUI, process it into work instructions
-def generate_documentation_from_video(input_video_path, full_input_path):
+def generate_documentation_from_video(input_video_name, full_input_path):
 
     # Ensure the input file path exists
     if not os.path.exists(full_input_path):
@@ -18,11 +18,11 @@ def generate_documentation_from_video(input_video_path, full_input_path):
         return
 
     # Begin processing the video. First transcode the video and transcribe the audio with timestamps included
-    print(f"Starting to process '{input_video_path}' located at '{full_input_path}'.")
-    base_filename = os.path.splitext(os.path.basename(input_video_path))[0]
+    print(f"Starting to process '{input_video_name}' located at '{full_input_path}'.")
+    base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
     date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
-    audio_path = process_video(full_input_path, base_filename, temp_output_directory)
+    audio_path = preliminary_video_processing(full_input_path, base_filename, temp_output_directory)
     print("Audio and video transcode complete.\n")
 
     # Obtain the markdown and transcription files

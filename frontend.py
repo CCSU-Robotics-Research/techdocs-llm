@@ -8,6 +8,8 @@ from backend import generate_documentation_from_video
 
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
+
+    # Creates a ModernRoundedButton
     def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
         super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat", bg=bg)
         self.command = command
@@ -24,12 +26,7 @@ class ModernRoundedButton(tk.Canvas):
         self.bind("<Enter>", self.on_hover)
         self.bind("<Leave>", self.on_leave)
 
-    def _on_configure(self, event=None):
-        # Only draw the button once when it's first configured
-        if not self.drawn:
-            self.draw_button(self.color)
-            self.drawn = True
-
+    # Encapsulation for drawing a button
     def draw_button(self, color):
         self.delete("button")  # Only delete button elements, not everything
         # Add "button" tag to all elements
@@ -43,13 +40,22 @@ class ModernRoundedButton(tk.Canvas):
 
     # Event handlers
 
+    # When a button is initialized, draw it once
+    def _on_configure(self, event=None):
+        if not self.drawn:
+            self.draw_button(self.color)
+            self.drawn = True
+
+    # When the button is clicked, do its respective action
     def on_click(self, event):
         if self.command:
             self.command()
 
+    # When the cursor hovers over the button, change the color to the hover color
     def on_hover(self, event):
         self.draw_button(self.hover_color)
 
+    # When the cursor leaves the button, change the color back to normal
     def on_leave(self, event):
         self.draw_button(self.color)
 
@@ -60,7 +66,7 @@ def display_main_page(root):
     main_frame = tk.Frame(root, bg="#f4f4f9")
     main_frame.pack(fill=tk.BOTH, expand=True)
 
-    # Dialog box for uploading a video
+    # Opens the system file explorer for uploading a video
     def browse_files():
         file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
         handle_file_upload(file_path)
@@ -70,7 +76,7 @@ def display_main_page(root):
         file_path = event.data.strip("{}")  # Remove curly braces
         handle_file_upload(file_path)
 
-    # Validate that a file was actually uploaded and that the file type is correct
+    # Validate that a file was actually uploaded/selected and that the file type is correct
     def handle_file_upload(file_path):
         valid_extensions = [".mp4", ".mov", ".avi", ".mkv"]
         _, file_extension = os.path.splitext(file_path)
@@ -128,10 +134,10 @@ def display_main_page(root):
         process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
 
-    # Communicate with backend.py to initiate video processing
+    # Communicate with backend.py to initiate video processing for a given video file
     def process_video(file_path):
         print(f"LOG: Processing Video from GUI: {file_path}")
-        generate_documentation_from_video(input_video_path=file_path[file_path.rfind("/") +1:], full_input_path=file_path) # Backend driver
+        generate_documentation_from_video(input_video_name=file_path[file_path.rfind("/") + 1:], full_input_path=file_path) # Backend driver
 
         # TODO: Add a buffering page(s) for video processing, multithreading most likely required
 
