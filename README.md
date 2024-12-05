@@ -63,14 +63,15 @@ Contains all the functions that handle the GUI, using the Tkinter library.
   - `on_hover()`: When the cursor hovers over the button, change the color to the hover color.
   - `on_leave()`: When the cursor leaves the button, change the color back to normal
 - `display_main_page()`: Displays the main page of the GUI
+  - `initialize_main_page()`: Construct the main page
   - `browse_files()`: Opens the system file explorer for uploading a video
   - `on_drop()`: Event handler for dragging a video into the GUI
   - `handle_file_upload()`: Validate that a file was actually uploaded/selected and that the file type is correct
   - `show_error_message()`: Error message page with a custom error message
   - `show_confirmation_message():` Page to confirm from user that the selected video is what they want processed (given a video file path)
+  - `show_success_message()`: Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
   - `process_video()`: Communicate with backend.py to initiate video processing for a given video file
-  - `reset_main_page()`: Clear the main frame and reinitialize the main page
-  - `initialize_main_page()`: Construct the main page
+  - `go_back_to_main_page()`: Clear the main frame and reinitialize the main page
 - `start_frontend()`: Driver for GUI initialization, to be invoked in main.py
 
 ### `backend.py`

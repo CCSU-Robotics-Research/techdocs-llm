@@ -184,7 +184,7 @@ def display_main_page(root):
         process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
 
-    # Success message page with instructions and a back to main page button.
+    # Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
     def show_success_message(output_directory):
 
         # Replace confirmation message with success message
@@ -210,7 +210,7 @@ def display_main_page(root):
                                             width=180, height=50)
         back_button.pack(pady=10)
 
-    # Communicate with backend.py to initiate video processing
+    # Communicate with backend.py to initiate video processing for a video file
     def process_video(file_path):
         print(f"LOG: Processing Video from GUI: {file_path}")
         result_documentation_path = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
