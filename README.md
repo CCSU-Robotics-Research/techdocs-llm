@@ -29,7 +29,9 @@ To install all the below requirements, use `pip install -r requirements.txt`, or
 
 The OpenAI API key needs to be saved as an env variable on your machine. You can export an environment variable from the Terminal with the name `OPENAI_API_KEY`.
 
-If that doesn't work, navigate to `transcribe.py` and replace the `client = OpenAI()` code statement with the following code block: 
+If that doesn't work, then create a file named ".env" in the root folder of the cloned GitHub repository (it should be a hidden file). In the file, write the text `OPENAI_API_KEY=<your-api-key-here>`.  <br />
+
+Then navigate to `transcribe.py` and replace the `client = OpenAI()` code statement with the following code block: 
 
 `from dotenv import load_dotenv` <br />
 `import os`
