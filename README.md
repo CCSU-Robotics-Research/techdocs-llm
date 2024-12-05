@@ -1,9 +1,20 @@
-# techdocs-llm
+# LLM in Workforce: Knowledge Capture and Transfer
+
 Video → Tech Docs utilizing various AI models for text &amp; photo/video
 
 The Video to Technical Documentation Generator is a desktop application that automatically converts instructional videos into detailed technical documentation. It uses AI to transcribe audio, analyze video content, and generate structured documentation with relevant screenshots.
 
-## System Package Requirements:
+## Usage:
+
+This system accepts only .mov, .mp4, .avi, and .mkv files. All other file types are rejected.
+
+Drag and drop a valid video file or choose a video file to upload using the system file explorer. Confirm the video you want to process is correct, then the system will process the video into work instructions with keyframes. All output is saved in the /output directory in the project repository.
+
+After processing a video, make sure to move the generated documentation files and keyframes to another location on your local machine. Failure to do so will cause the output to be overwritten in subsequent video processing requests.
+
+**Note:** Please be mindful that processing a video can be somewhat expensive. Running a 12-minute robotics lab video costed about 3-4 USD. Please plan your tests accordingly.
+
+## System/OS Package Requirements:
 You must have these packages installed to your local machine prior to installing any Python packages.
 
 - **Python**: Install the latest version of Python from https://python.org. Verify Python is installed with `python --version`.
@@ -17,7 +28,7 @@ To install all the below requirements, use `pip install -r requirements.txt`, or
 - **openai:** The OpenAI client library to access the API.
 - **pydub:** Used for audio processing, often requiring FFmpeg. Verify FFmpeg is installed, see above.
 - **markdown:** Used for markdown file processing for page generation.
-- **tkinterdnd2:** This is a drag-and-drop library for Tkinter. 
+- **tkinterdnd2:** This is a drag-and-drop library for Tkinter.
 
 ## Setup:
 
@@ -104,3 +115,15 @@ Contains functions for the final keyframe selection process from a set of interv
 
 - `encode_image()`: Encodes an image into a base64 string
 - `image_analysis()`: Analyses intervals of images, comparing them against their corresponding alt text placeholders, and selects the best keyframes from each interval
+
+## Proof of Concept for User Input Keyframe Extraction:
+
+Aside from the main branch on GitHub, there is a user-input-proof-of-concept branch. This branch contains some Tkinter GUI code for a prototype of what user-input keyframe extraction would look like. <br />
+
+This system would run the exact same as the automated keyframe extraction (with time intervals being fetched and intervals of images being analyzed). However, rather than having OpenAI API analyze each set of images, the user would manually choose which one they think is best given the image placeholder (specified in the GUI). The idea is to save money on API calls and have a user eliminate any possible mistakes that OpenAI API may make.
+
+This branch contains hard-coded samples of what the frontend would look like, and is detached from the backend. However, **building upon this branch is NOT recommended** since this branch is numerous commits behind the main branch (which contains the up-to-date working system).
+
+Our suggestion is to use the code in this branch as a reference to build upon a feature branch that is created from main. Once sufficient progress has been made in a feature branch with the user-input keyframe extraction, upon client approval, the proof of concept branch can be safely deleted.
+
+**Note:** This is completely independent from the user story about a local machine-learning library based keyframe extraction, which is another method suggested by the client to move the system away from relying on API calls.
