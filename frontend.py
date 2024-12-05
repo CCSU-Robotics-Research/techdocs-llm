@@ -6,6 +6,8 @@ from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from backend import generate_documentation_from_video
 
+global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button
+
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
 
@@ -66,95 +68,9 @@ def display_main_page(root):
     main_frame = tk.Frame(root, bg="#f4f4f9")
     main_frame.pack(fill=tk.BOTH, expand=True)
 
-    # Opens the system file explorer for uploading a video
-    def browse_files():
-        file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
-        handle_file_upload(file_path)
-
-    # Event handler for dragging a video into the GUI
-    def on_drop(event):
-        file_path = event.data.strip("{}")  # Remove curly braces
-        handle_file_upload(file_path)
-
-    # Validate that a file was actually uploaded/selected and that the file type is correct
-    def handle_file_upload(file_path):
-        valid_extensions = [".mp4", ".mov", ".avi", ".mkv"]
-        _, file_extension = os.path.splitext(file_path)
-
-        if not file_path:
-            print("LOG: File Explorer opened, no file selected")
-            show_error_message("You must select a video file to process.")
-        elif file_extension.lower() not in valid_extensions:
-            print(f"LOG: Uploaded Bad File: {file_path}")
-            show_error_message("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, and .mkv.")
-        else:
-            print(f"LOG: Uploaded Video File: {file_path}")
-            show_confirmation_message(file_path)
-
-    # Error message page with a custom error message
-    def show_error_message(error_message):
-        # Replace drag-and-drop box with error message
-        canvas_frame.pack_forget()
-        button_frame.pack_forget()
-
-        # Error message label
-        error_label = tk.Label(main_frame, text=error_message, font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        error_label.pack(pady=20)
-
-        # Back to main page button
-        back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=reset_main_page, width=180, height=50)
-        back_button.pack(pady=10)
-
-    # Page to confirm from user that the selected video is what they want processed
-    def show_confirmation_message(file_path):
-        # Extract filename from file path
-        filename = file_path.split("/")[-1]
-
-        # Replace drag-and-drop box with confirmation message
-        canvas_frame.pack_forget()
-        button_frame.pack_forget()
-
-        # Confirmation message label
-        confirmation_label = tk.Label(main_frame, text=f"Please confirm: Is this the video file you want to process?", font=("Segoe UI", 12, "bold"), fg="blue", bg="#f4f4f9", wraplength=600, justify="center")
-        confirmation_label.pack(pady=10)
-
-        # Video filename label
-        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {file_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
-        filename_label.pack(pady=5)
-
-        # Action buttons
-        action_button_frame = tk.Frame(main_frame, bg="#f4f4f9")
-        action_button_frame.pack(pady=10)
-
-        # Back to main page button
-        back_button = ModernRoundedButton(action_button_frame, text = "No, Back to Main Page", command=reset_main_page, width=180, height=50)
-        back_button.grid(row=0, column=0, padx=10)
-
-        # Start video processing button
-        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
-        process_button.grid(row=0, column=1, padx=10)
-
-    # Communicate with backend.py to initiate video processing for a given video file
-    def process_video(file_path):
-        print(f"LOG: Processing Video from GUI: {file_path}")
-        generate_documentation_from_video(input_video_name=file_path[file_path.rfind("/") + 1:], full_input_path=file_path) # Backend driver
-
-        # TODO: Add a buffering page(s) for video processing, multithreading most likely required
-
-        # TODO: Show an error message if the video fails to process
-
-        # TODO: Once the video is finished processing, display a success page
-        reset_main_page() # For now, just go back to the main page immediately
-
-    # Clear the main frame and reinitialize the main page
-    def reset_main_page():
-        print("LOG: Reverting to main page")
-        for widget in main_frame.winfo_children():
-            widget.destroy()
-        initialize_main_page()
-
     # Construct the main page
     def initialize_main_page():
+
         # Header Section
         header = tk.Label(main_frame, text="Video to Instruction Manual", font=("Segoe UI", 18, "bold"), bg="#4CAF50",
                           fg="white", pady=10)
@@ -192,6 +108,126 @@ def display_main_page(root):
         footer = tk.Label(main_frame, text="© 2024 The CS MJRS Team | CCSU Robotics Research", font=("Segoe UI", 10),
                           bg="#f4f4f9", fg="#999999", pady=10)
         footer.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Opens the system file explorer for uploading a video
+    def browse_files():
+        file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
+        handle_file_upload(file_path)
+
+    # Event handler for dragging a video into the GUI
+    def on_drop(event):
+        file_path = event.data.strip("{}")  # Remove curly braces
+        handle_file_upload(file_path)
+
+    # Validate that a file was actually uploaded/selected and that the file type is correct
+    def handle_file_upload(file_path):
+        valid_extensions = [".mp4", ".mov", ".avi", ".mkv"]
+        _, file_extension = os.path.splitext(file_path)
+
+        if not file_path:
+            print("LOG: File Explorer opened, no file selected")
+            show_error_message("You must select a video file to process.")
+        elif file_extension.lower() not in valid_extensions:
+            print(f"LOG: Uploaded Bad File: {file_path}")
+            show_error_message("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, and .mkv.")
+        else:
+            print(f"LOG: Uploaded Video File: {file_path}")
+            show_confirmation_message(file_path)
+
+    # Error message page with a custom error message for invalid file uploads
+    def show_error_message(error_message):
+
+        # Replace drag-and-drop box with error message
+        canvas_frame.pack_forget()
+        button_frame.pack_forget()
+
+        # Error message label
+        error_label = tk.Label(main_frame, text=error_message, font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        error_label.pack(pady=20)
+
+        # Back to main page button
+        back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=go_back_to_main_page, width=180, height=50)
+        back_button.pack(pady=10)
+
+    # Page to confirm from user that the selected video is what they want processed
+    def show_confirmation_message(file_path):
+
+        # Extract filename from file path
+        filename = file_path.split("/")[-1]
+
+        # Replace drag-and-drop box with confirmation message
+        canvas_frame.pack_forget()
+        button_frame.pack_forget()
+
+        # Confirmation message label
+        global confirmation_label
+        confirmation_label = tk.Label(main_frame, text=f"Please confirm: Is this the video file you want to process?", font=("Segoe UI", 12, "bold"), fg="blue", bg="#f4f4f9", wraplength=600, justify="center")
+        confirmation_label.pack(pady=10)
+
+        # Video filename label
+        global filename_label
+        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {file_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
+        filename_label.pack(pady=5)
+
+        # Action buttons
+        global action_button_frame
+        action_button_frame = tk.Frame(main_frame, bg="#f4f4f9")
+        action_button_frame.pack(pady=10)
+
+        # Back to main page button
+        global back_button
+        back_button = ModernRoundedButton(action_button_frame, text = "No, Back to Main Page", command=go_back_to_main_page, width=180, height=50)
+        back_button.grid(row=0, column=0, padx=10)
+
+        # Start video processing button
+        global process_button
+        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
+        process_button.grid(row=0, column=1, padx=10)
+
+    # Success message page with instructions and a back to main page button.
+    def show_success_message(output_directory):
+
+        # Replace confirmation message with success message
+        global confirmation_label, filename_label, action_button_frame, back_button, process_button
+        confirmation_label.pack_forget()
+        filename_label.pack_forget()
+        action_button_frame.pack_forget()
+        back_button.pack_forget()
+        process_button.pack_forget()
+
+        # Success message label
+        success_label = tk.Label(main_frame, text="Video Processing Successful!", font=("Segoe UI", 12, "bold"), fg="green",
+                               bg="#f4f4f9", wraplength=600, justify="center")
+        success_label.pack(pady=20)
+
+        # Instructions label
+        instructions_label = tk.Label(main_frame, text=f"Documentation and Keyframes Saved To:\n{output_directory}\n\nNavigate to this directory and move the newly generated .html file (and corresponding keyframe images) to an external location before processing another video. Failure to do so will cause your output files to be overwritten in subsequent video processes.",
+                                    font = ("Segoe UI", 11), fg = "#333333", bg = "#f4f4f9", wraplength = 600, justify = "center")
+        instructions_label.pack(pady=5)
+
+        # Back to main page button
+        back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=go_back_to_main_page,
+                                            width=180, height=50)
+        back_button.pack(pady=10)
+
+    # Communicate with backend.py to initiate video processing
+    def process_video(file_path):
+        print(f"LOG: Processing Video from GUI: {file_path}")
+        result_documentation_path = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
+
+        # TODO: Add a buffering page(s) for video processing, multithreading most likely required
+
+        # TODO: Show an error message if the video fails to process
+
+        # Once the video is finished processing, display a success page with the output documentation
+        show_success_message(result_documentation_path)
+
+    # Clear the main frame and reinitialize the main page
+    def go_back_to_main_page():
+        print("LOG: Reverting to main page")
+        for widget in main_frame.winfo_children():
+            widget.destroy()
+        initialize_main_page()
 
     initialize_main_page() # Create a main page to be displayed to the user
 

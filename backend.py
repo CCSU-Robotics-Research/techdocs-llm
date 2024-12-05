@@ -56,3 +56,6 @@ def generate_documentation_from_video(input_video_name, full_input_path):
     print("Video processing complete.")
     print("Page successfully generated.")
     print("View the Docs with keyframes here: " + html_file)
+
+    # Return the output documentations' file path to display in the GUI
+    return html_file
