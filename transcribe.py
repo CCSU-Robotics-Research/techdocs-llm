@@ -92,7 +92,8 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
 
     Your task:
     - Match each image tag’s alt text with the relevant section(s) of the transcript.
-    - Identify the best start and end timestamps that correspond to each alt text description.
+    - Identify the best start and end timestamps that correspond to each alt text description, with each start timestamp coming BEFORE its end timestamp (i.e., the end timestamp must be greater than the start timestamp to logically make a time interval).
+    - Ensure each time interval is as narrow as possible, just enough to capture the details presented in the alt text without omitting any details. Ideally, the difference between each start and end timestamp should be no more than 5-7 seconds long.
     - Return each matched time interval in the format: [frame_id] start-end | "alt text", where `frame_id` is the order of the image tag in the HTML file (1, 2, 3, etc.), `start-end` represents the timestamp range (each are in seconds, no colon formatting), and '"alt text"' is the corresponding alt text attribute from the img tag in the HTML file.
 
     Example Format:
@@ -134,7 +135,7 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
         formatted_tuple = (frame_name, info[1].strip('"'), start_time, end_time)
         formatted_intervals.append(formatted_tuple)
 
-    # Validate each interval (end should be greater than start)
+    # Validate each interval, end should be greater than start (THIS WILL BE DELETED):
     for i, (frame, description, start, end) in enumerate(formatted_intervals):
         # Swap start and end if end is less than start
         if end < start:
