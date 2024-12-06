@@ -19,7 +19,7 @@ You must have these packages installed to your local machine prior to installing
 
 - **Python**: Install the latest version of Python from https://python.org. Verify Python is installed with `python --version`.
 - **FFmpeg**: Install the latest version from https://ffmpeg.org, or use the Homebrew package manager. Verify FFmpeg is installed on your system with `ffmpeg -version`.
-- **tkinter:** Tkinter should already be included as a part of Python. However, to install tkinter, use `sudo apt-get install python3-tk`. If that doesn't work, try `pip install tk`. To verify installation of tkinter, run `python -m tkinter` in the Terminal. If you see a GUI window popup, then Tkinter is installed on your system.
+- **tkinter:** Tkinter should already be included as a part of Python. However, to install tkinter, use `sudo apt-get install python3-tk`. If that doesn't work, try `pip install tk`. To verify installation of tkinter, run `python -m tkinter` in the Terminal. If you see a GUI window popup, then Tkinter is installed on your system. _(NOTE: Despite successful installation, you may see a warning in PyCharm saying "Package requirement 'tkinter' is not satisfied" — if the program still runs and displays a GUI window, you can safely ignore this warning.)_
 
 ## Python Package Requirements:
 To install all the below requirements, use `pip install -r requirements.txt`, or use `pip install <package-name>` and install each package separately.
