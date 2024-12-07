@@ -1,14 +1,38 @@
+# generatePage.py contains functions to generate an HTML page of work instructions from a processed video.
+
 import markdown
 import os
+import re
 
-
+# Using a markdown file, generate an HTML page as output
 def generate_page(markdown_path):
+
+    # Check if the markdown file exists
     if not os.path.exists(markdown_path):
         raise FileNotFoundError(f"File '{markdown_path}' not found")
 
     # Read the Markdown content
     with open(markdown_path, 'r') as file:
         markdown_content = file.read()
+
+    # Initialize counter for image numbering
+    image_counter = 1
+
+    # Function to replace with numbered placeholders
+    def numbered_replacement(match):
+        nonlocal image_counter
+        alt_text = match.group(1) or f"Image {image_counter} - No description provided"  # Fallback text if alt is empty
+        placeholder = f'frame_{image_counter}.jpg'
+        image_counter += 1
+        return f'<img src="{placeholder}" alt="{alt_text}" class="border-2 border-gray-300 rounded-lg my-4" style="max-width: 100%; height: auto;">'
+
+    # Replace image placeholders with numbered HTML img tags
+    # Updated regex to better handle various markdown image formats
+    markdown_content = re.sub(
+        r'!\[(.*?)\](?:\((.*?)\))?',  # Matches both ![alt]() and ![alt](url)
+        numbered_replacement,
+        markdown_content
+    )
 
     # Convert Markdown content to HTML
     html_content = markdown.markdown(markdown_content)
@@ -60,4 +84,4 @@ def generate_page(markdown_path):
     return output_path
 
 # Example usage
-generate_page("temp/test/example.md")
+# generate_page("temp/test/example.md")

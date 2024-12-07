@@ -1,0 +1,245 @@
+# frontend.py contains all the functions that handle the GUI, using the Tkinter library.
+
+import os
+import tkinter as tk
+from tkinter import filedialog
+from tkinterdnd2 import DND_FILES, TkinterDnD
+from backend import generate_documentation_from_video
+
+global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button
+
+# Class to declare a custom ModernRoundedButton
+class ModernRoundedButton(tk.Canvas):
+
+    # Creates a ModernRoundedButton
+    def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
+        super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat", bg=bg)
+        self.command = command
+        self.color = color
+        self.hover_color = hover_color
+        self.radius = radius
+        self.text = text
+
+        # Wait for the widget to be fully created before drawing
+        self.bind("<Configure>", self._on_configure)
+        self.drawn = False
+
+        self.bind("<Button-1>", self.on_click)
+        self.bind("<Enter>", self.on_hover)
+        self.bind("<Leave>", self.on_leave)
+
+    # Encapsulation for drawing a button
+    def draw_button(self, color):
+        self.delete("button")  # Only delete button elements, not everything
+        # Add "button" tag to all elements
+        self.create_arc(0, 0, self.radius * 2, self.radius * 2, start=90, extent=90, fill=color, outline=color, tags="button")
+        self.create_arc(self.winfo_width() - self.radius * 2, 0, self.winfo_width(), self.radius * 2, start=0, extent=90, fill=color, outline=color, tags="button")
+        self.create_arc(0, self.winfo_height() - self.radius * 2, self.radius * 2, self.winfo_height(), start=180, extent=90, fill=color, outline=color, tags="button")
+        self.create_arc(self.winfo_width() - self.radius * 2, self.winfo_height() - self.radius * 2, self.winfo_width(), self.winfo_height(), start=270, extent=90, fill=color, outline=color, tags="button")
+        self.create_rectangle(self.radius, 0, self.winfo_width() - self.radius, self.winfo_height(), fill=color, outline=color, tags="button")
+        self.create_rectangle(0, self.radius, self.winfo_width(), self.winfo_height() - self.radius, fill=color, outline=color, tags="button")
+        self.create_text(self.winfo_width() / 2, self.winfo_height() / 2, text=self.text, fill="white", font=("Segoe UI", 12, "bold"), tags="button")
+
+    # Event handlers
+
+    # When a button is initialized, draw it once
+    def _on_configure(self, event=None):
+        if not self.drawn:
+            self.draw_button(self.color)
+            self.drawn = True
+
+    # When the button is clicked, do its respective action
+    def on_click(self, event):
+        if self.command:
+            self.command()
+
+    # When the cursor hovers over the button, change the color to the hover color
+    def on_hover(self, event):
+        self.draw_button(self.hover_color)
+
+    # When the cursor leaves the button, change the color back to normal
+    def on_leave(self, event):
+        self.draw_button(self.color)
+
+# Displays the main page of the GUI
+def display_main_page(root):
+
+    # Frame and state variables
+    main_frame = tk.Frame(root, bg="#f4f4f9")
+    main_frame.pack(fill=tk.BOTH, expand=True)
+
+    # Construct the main page
+    def initialize_main_page():
+
+        # Header Section
+        header = tk.Label(main_frame, text="Video to Instruction Manual", font=("Segoe UI", 18, "bold"), bg="#4CAF50",
+                          fg="white", pady=10)
+        header.pack(fill=tk.X)
+
+        # Instruction Label
+        instruction_frame = tk.Frame(main_frame, bg="#f4f4f9", pady=20)
+        instruction_frame.pack(fill=tk.X)
+        instruction_label = tk.Label(instruction_frame,
+                                     text="Drag and drop your video file here or use the button below to select a file.",
+                                     font=("Segoe UI", 12), bg="#f4f4f9", fg="#333333", wraplength=600,
+                                     justify="center")
+        instruction_label.pack()
+
+        # Drag-and-Drop Canvas
+        global canvas_frame
+        canvas_frame = tk.Frame(main_frame, bg="#ffffff", highlightthickness=0)
+        canvas_frame.pack(pady=10, ipadx=10, ipady=10)
+        canvas = tk.Canvas(canvas_frame, bg="#e8e8e8", highlightthickness=0, width=500, height=200, bd=0)
+        canvas.pack()
+        canvas.create_rectangle(10, 10, 490, 190, fill="#ffffff", outline="#dddddd", width=2)
+        canvas.create_text(250, 100, text="Drag and Drop Video Here", font=("Segoe UI", 14, "italic"), fill="#bbbbbb")
+        canvas.drop_target_register(DND_FILES)
+        canvas.dnd_bind('<<Drop>>', on_drop)
+
+        # Browse Files Button
+        global button_frame
+        button_frame = tk.Frame(main_frame, bg="#f4f4f9")
+        button_frame.pack(pady=10)
+        browse_button = ModernRoundedButton(button_frame, text="Browse Files", command=browse_files, width=180,
+                                            height=50)
+        browse_button.pack()
+
+        # Footer Section
+        footer = tk.Label(main_frame, text="© 2024 The CS MJRS Team | CCSU Robotics Research", font=("Segoe UI", 10),
+                          bg="#f4f4f9", fg="#999999", pady=10)
+        footer.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Opens the system file explorer for uploading a video
+    def browse_files():
+        file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
+        handle_file_upload(file_path)
+
+    # Event handler for dragging a video into the GUI
+    def on_drop(event):
+        file_path = event.data.strip("{}")  # Remove curly braces
+        handle_file_upload(file_path)
+
+    # Validate that a file was actually uploaded/selected and that the file type is correct
+    def handle_file_upload(file_path):
+        valid_extensions = [".mp4", ".mov", ".avi", ".mkv"]
+        _, file_extension = os.path.splitext(file_path)
+
+        if not file_path:
+            print("LOG: File Explorer opened, no file selected")
+            show_error_message("You must select a video file to process.")
+        elif file_extension.lower() not in valid_extensions:
+            print(f"LOG: Uploaded Bad File: {file_path}")
+            show_error_message("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, and .mkv.")
+        else:
+            print(f"LOG: Uploaded Video File: {file_path}")
+            show_confirmation_message(file_path)
+
+    # Error message page with a custom error message for invalid file uploads
+    def show_error_message(error_message):
+
+        # Replace drag-and-drop box with error message
+        canvas_frame.pack_forget()
+        button_frame.pack_forget()
+
+        # Error message label
+        error_label = tk.Label(main_frame, text=error_message, font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        error_label.pack(pady=20)
+
+        # Back to main page button
+        back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=go_back_to_main_page, width=180, height=50)
+        back_button.pack(pady=10)
+
+    # Page to confirm from user that the selected video is what they want processed
+    def show_confirmation_message(file_path):
+
+        # Extract filename from file path
+        filename = file_path.split("/")[-1]
+
+        # Replace drag-and-drop box with confirmation message
+        canvas_frame.pack_forget()
+        button_frame.pack_forget()
+
+        # Confirmation message label
+        global confirmation_label
+        confirmation_label = tk.Label(main_frame, text=f"Please confirm: Is this the video file you want to process?", font=("Segoe UI", 12, "bold"), fg="blue", bg="#f4f4f9", wraplength=600, justify="center")
+        confirmation_label.pack(pady=10)
+
+        # Video filename label
+        global filename_label
+        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {file_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
+        filename_label.pack(pady=5)
+
+        # Action buttons
+        global action_button_frame
+        action_button_frame = tk.Frame(main_frame, bg="#f4f4f9")
+        action_button_frame.pack(pady=10)
+
+        # Back to main page button
+        global back_button
+        back_button = ModernRoundedButton(action_button_frame, text = "No, Back to Main Page", command=go_back_to_main_page, width=180, height=50)
+        back_button.grid(row=0, column=0, padx=10)
+
+        # Start video processing button
+        global process_button
+        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
+        process_button.grid(row=0, column=1, padx=10)
+
+    # Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
+    def show_success_message(output_directory):
+
+        # Replace confirmation message with success message
+        global confirmation_label, filename_label, action_button_frame, back_button, process_button
+        confirmation_label.pack_forget()
+        filename_label.pack_forget()
+        action_button_frame.pack_forget()
+        back_button.pack_forget()
+        process_button.pack_forget()
+
+        # Success message label
+        success_label = tk.Label(main_frame, text="Video Processing Successful!", font=("Segoe UI", 12, "bold"), fg="green",
+                               bg="#f4f4f9", wraplength=600, justify="center")
+        success_label.pack(pady=20)
+
+        # Instructions label
+        instructions_label = tk.Label(main_frame, text=f"Documentation and Keyframes Saved To:\n{output_directory}\n\nNavigate to this directory and move the newly generated .html file (and corresponding keyframe images) to an external location before processing another video. Failure to do so will cause your output files to be overwritten in subsequent video processes.",
+                                    font = ("Segoe UI", 11), fg = "#333333", bg = "#f4f4f9", wraplength = 600, justify = "center")
+        instructions_label.pack(pady=5)
+
+        # Back to main page button
+        back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=go_back_to_main_page,
+                                            width=180, height=50)
+        back_button.pack(pady=10)
+
+    # Communicate with backend.py to initiate video processing for a video file
+    def process_video(file_path):
+        print(f"LOG: Processing Video from GUI: {file_path}")
+        result_documentation_path = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
+
+        # TODO: Add a buffering page(s) for video processing, multithreading most likely required
+
+        # TODO: Show an error message if the video fails to process
+
+        # Once the video is finished processing, display a success page with the output documentation
+        show_success_message(result_documentation_path)
+
+    # Clear the main frame and reinitialize the main page
+    def go_back_to_main_page():
+        print("LOG: Reverting to main page")
+        for widget in main_frame.winfo_children():
+            widget.destroy()
+        initialize_main_page()
+
+    initialize_main_page() # Create a main page to be displayed to the user
+
+# Driver for GUI initialization, to be invoked in main.py
+def start_frontend():
+
+    # Main Tkinter window
+    root = TkinterDnD.Tk()
+    root.title("Instruction Manual Creator")
+    root.geometry("800x500")
+    root.configure(bg="#f4f4f9")
+
+    # Display the main page
+    display_main_page(root)
+    root.mainloop() # Run the Tkinter event loop
