@@ -2,6 +2,7 @@
 
 from openai import OpenAI
 from pydub import AudioSegment
+import json
 
 client = OpenAI() # Instance to access OpenAI API
 
@@ -25,13 +26,14 @@ def transcribe(audio_file_path):
                                                           model="whisper-1",
                                                           response_format="verbose_json",
                                                           timestamp_granularities=["segment"])
-
+            #print(response)
             # Correct each transcription segment's timestamps and add the segment to the transcription
             if response.segments:
                 for item in response.segments:
-                    start_time = item.start + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
-                    end_time = item.end + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
-                    text = item.text.strip()
+                    #print(item)
+                    start_time = item['start'] + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
+                    end_time = item['end'] + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
+                    text = item['text'].strip()
                     full_transcription += f"[{start_time:.2f}-{end_time:.2f}] {text}\n"
             else:
                 print("Unable to access JSON data for segments.") # Error reading the API response
