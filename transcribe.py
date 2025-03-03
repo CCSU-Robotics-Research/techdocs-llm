@@ -31,9 +31,9 @@ def transcribe(audio_file_path):
             if response.segments:
                 for item in response.segments:
                     #print(item)
-                    start_time = item['start'] + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
-                    end_time = item['end'] + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
-                    text = item['text'].strip()
+                    start_time = item.start + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
+                    end_time = item.end + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
+                    text = item.text.strip()
                     full_transcription += f"[{start_time:.2f}-{end_time:.2f}] {text}\n"
             else:
                 print("Unable to access JSON data for segments.") # Error reading the API response
