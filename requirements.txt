@@ -3,3 +3,4 @@ openai
 pydub
 markdown
 tkinterdnd2
+pillow

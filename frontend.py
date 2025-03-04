@@ -5,8 +5,10 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from backend import generate_documentation_from_video
+from PIL import Image, ImageTk
+import shutil
 
-global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button
+global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame
 
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
@@ -77,6 +79,7 @@ def display_main_page(root):
         header.pack(fill=tk.X)
 
         # Instruction Label
+        global instruction_frame
         instruction_frame = tk.Frame(main_frame, bg="#f4f4f9", pady=20)
         instruction_frame.pack(fill=tk.X)
         instruction_label = tk.Label(instruction_frame,
@@ -210,17 +213,94 @@ def display_main_page(root):
                                             width=180, height=50)
         back_button.pack(pady=10)
 
-    # Communicate with backend.py to initiate video processing for a video file
+    # Creates the image selection interface
+    def image_selection(alt_texts, directories, html_file):
+        output_dir = "output"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        index = 0  # Current index of alt_texts and directories
+
+        def load_images(directory):
+            """Loads images from a directory and returns a list of PhotoImage objects."""
+            images = []
+            for filename in os.listdir(directory):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    filepath = os.path.join(directory, filename)
+                    try:
+                        image = Image.open(filepath)
+                        width, height = image.size
+                        image = image.resize((width//10, height//10), Image.Resampling.LANCZOS)  # Resize images
+                        photo = ImageTk.PhotoImage(image)
+                        images.append((photo, filepath))
+                    except Exception as e:
+                        print(f"Error loading image: {filepath}, {e}")
+            return images
+
+        def display_images():
+            """Displays the images in a grid and the alt text."""
+            nonlocal index
+            if index >= len(alt_texts):
+                show_success_message(html_file)
+                return
+
+            alt_label.config(text=alt_texts[index])
+
+            # Clear existing buttons
+            for widget in image_frame.winfo_children():
+                widget.destroy()
+
+            images = load_images(directories[index])
+            row, col = 0, 0
+            for photo, filepath in images:
+                button = tk.Button(image_frame, image=photo, command=lambda f=filepath: select_image(f))
+                button.image = photo  # Keep a reference to prevent garbage collection
+                button.grid(row=row, column=col, padx=5, pady=5)
+                col += 1
+                if col >= 4:  # 3 columns per row
+                    col = 0
+                    row += 1
+
+        def select_image(filepath):
+            """Copies the selected image to the output directory and moves to the next set."""
+            nonlocal index
+            shutil.copy(filepath, os.path.join(output_dir, f"frame_{index+1}.jpg"))
+            index += 1
+            display_images()
+
+        alt_label = tk.Label(main_frame, text="", bg="#f4f4f9")
+        alt_label.pack(pady=10)
+
+        image_frame = tk.Frame(main_frame)
+        image_frame.pack()
+
+        display_images()
+
     def process_video(file_path):
+        # Remove the confirmation page and display the processing video label
+        print("LOG: Removing Confirmation Page")
+        global confirmation_label, filename_label, action_button_frame, back_button, process_button
+        confirmation_label.pack_forget()
+        filename_label.pack_forget()
+        action_button_frame.pack_forget()
+        back_button.pack_forget()
+        process_button.pack_forget()
+        instruction_frame.pack_forget()
+        
+        # Add processing video label and select image label
+        # print("LOG: Adding processing video label")
+        # process_label = tk.Label(main_frame, text="Processing Video...", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        # process_label.pack(pady=20)
+        select_image_label = tk.Label(main_frame, text="Select an image:", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        select_image_label.pack(pady=10)
+
+        # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {file_path}")
-        result_documentation_path = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
-
-        # TODO: Add a buffering page(s) for video processing, multithreading most likely required
-
-        # TODO: Show an error message if the video fails to process
-
-        # Once the video is finished processing, display a success page with the output documentation
-        show_success_message(result_documentation_path)
+        alt_texts, output_direcs, html_file = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
+        
+        # Begin manual image selection
+        print("LOG: Beginning manual image selection")
+        image_selection(alt_texts, output_direcs, html_file)
 
     # Clear the main frame and reinitialize the main page
     def go_back_to_main_page():
@@ -237,7 +317,7 @@ def start_frontend():
     # Main Tkinter window
     root = TkinterDnD.Tk()
     root.title("Instruction Manual Creator")
-    root.geometry("800x500")
+    root.geometry("1280x720")
     root.configure(bg="#f4f4f9")
 
     # Display the main page

@@ -1,13 +1,13 @@
 # backend.py is the driver of the video processing (occurring in the background after a video is uploaded) which also depends on other files for assistance.
 
 import os
+import shutil
 from transcribe import transcribe
 from transcribe import obtain_time_intervals
 from processVideo import preliminary_video_processing
 from processVideo import interval_frame_extraction
 from datetime import datetime
 from generatePage import generate_page
-from imageAnalysis import image_analysis
 
 # Given an input video from the GUI, process it into work instructions
 def generate_documentation_from_video(input_video_name, full_input_path):
@@ -16,6 +16,19 @@ def generate_documentation_from_video(input_video_name, full_input_path):
     if not os.path.exists(full_input_path):
         print("ERROR: File not found. Please make sure the file path is valid and try again.")
         return
+
+    # Clear the temp directory
+    print("LOG: Clearing temp directory")
+    for folder_path in os.listdir("temp"):
+        try:
+            shutil.rmtree(f"temp/{folder_path}")
+            print(f"LOG: Deleted: {folder_path}")
+        except FileNotFoundError:
+            print("LOG: Folder not found.")
+        except PermissionError:
+            print("LOG: Permission denied. Try running with sudo.")
+        except Exception as e:
+            print(f"Error: {e}")
 
     # Begin processing the video. First transcode the video and transcribe the audio with timestamps included
     print(f"Starting to process '{input_video_name}' located at '{full_input_path}'.")
@@ -47,15 +60,5 @@ def generate_documentation_from_video(input_video_name, full_input_path):
 
     print("Interval frame extraction complete.\n")
 
-    # From each set of images, using the corresponding img placeholder, select the best keyframe and insert it into the HTML file
-    print("Beginning keyframe selection and insertion...")
-    image_analysis(alt_texts, interval_output_directories)
-    print("Keyframe insertion complete.\n")
-
-    # Video processing complete.
-    print("Video processing complete.")
-    print("Page successfully generated.")
-    print("View the Docs with keyframes here: " + html_file)
-
-    # Return the output documentations' file path to display in the GUI
-    return html_file
+    # Return the image descriptions, file paths to the image directories, and the HTML file to the frontend
+    return alt_texts, interval_output_directories, html_file
