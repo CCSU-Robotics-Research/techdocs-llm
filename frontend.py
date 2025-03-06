@@ -7,6 +7,7 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 from backend import generate_documentation_from_video
 from PIL import Image, ImageTk
 import shutil
+import webbrowser
 
 global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame
 
@@ -171,7 +172,7 @@ def display_main_page(root):
         global filename_label
         filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {file_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
         filename_label.pack(pady=5)
-
+        
         # Action buttons
         global action_button_frame
         action_button_frame = tk.Frame(main_frame, bg="#f4f4f9")
@@ -213,6 +214,11 @@ def display_main_page(root):
                                             width=180, height=50)
         back_button.pack(pady=10)
 
+        #Opens HTML File to web browser
+        webbrowser.open_new_tab(output_directory)
+        print("LOG: Open HTML")
+        
+        
     # Creates the image selection interface
     def image_selection(alt_texts, directories, html_file):
         output_dir = "output"
@@ -220,6 +226,8 @@ def display_main_page(root):
             os.makedirs(output_dir)
 
         index = 0  # Current index of alt_texts and directories
+        
+        
 
         def load_images(directory):
             """Loads images from a directory and returns a list of PhotoImage objects."""
