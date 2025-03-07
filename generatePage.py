@@ -3,7 +3,7 @@
 import markdown
 import os
 import re
-
+from tkinter import filedialog
 # Using a markdown file, generate an HTML page as output
 def generate_page(markdown_path):
 
@@ -63,18 +63,23 @@ def generate_page(markdown_path):
     </body>
     </html>
     """
-
+    
+    # User picks output folder
+    folder_selected = filedialog.askdirectory()
+    print("LOG :",folder_selected)
+    
+    
     # Create the path for the output folder
-    parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(markdown_path))))
-    output_dir = os.path.join(parent_dir, "output")
+    # parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(markdown_path))))
+    # output_dir = os.path.join(parent_dir, "output")
 
-    # Ensure the output folder exists
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # # Ensure the output folder exists
+    # if not os.path.exists(output_dir):
+    #     os.makedirs(output_dir)
 
     # Generate the output path for the HTML file
     markdown_filename = os.path.splitext(os.path.basename(markdown_path))[0]
-    output_path = os.path.join(output_dir, f"{markdown_filename}.html")
+    output_path = os.path.join(folder_selected, f"{markdown_filename}.html")
 
     # Write the HTML content to a new file
     with open(output_path, 'w') as file:

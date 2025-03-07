@@ -302,6 +302,7 @@ def display_main_page(root):
         select_image_label = tk.Label(main_frame, text="Select an image:", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
         select_image_label.pack(pady=10)
 
+        
         # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {file_path}")
         alt_texts, output_direcs, html_file = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)

@@ -76,7 +76,7 @@ def transcribe(audio_file_path):
     with open(output_file_path, "w") as f:
         f.write(response.choices[0].message.content)
         print("Markdown saved to: ", output_file_path)
-
+        print(output_file_path)
     # Return the HTML file and the transcription with timestamps
     return output_file_path, full_transcription
 
