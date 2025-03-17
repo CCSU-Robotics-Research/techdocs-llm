@@ -61,4 +61,4 @@ def generate_documentation_from_video(input_video_name, full_input_path):
     print("Interval frame extraction complete.\n")
 
     # Return the image descriptions, file paths to the image directories, and the HTML file to the frontend
-    return alt_texts, interval_output_directories, html_file
+    return alt_texts, interval_output_directories, html_file, selected_folder_path

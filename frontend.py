@@ -220,8 +220,7 @@ def display_main_page(root):
         
         
     # Creates the image selection interface
-    def image_selection(alt_texts, directories, html_file):
-        output_dir = "output"
+    def image_selection(alt_texts, directories, html_file, output_dir):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -258,6 +257,8 @@ def display_main_page(root):
             for widget in image_frame.winfo_children():
                 widget.destroy()
 
+            
+
             images = load_images(directories[index])
             row, col = 0, 0
             for photo, filepath in images:
@@ -282,6 +283,9 @@ def display_main_page(root):
         image_frame = tk.Frame(main_frame)
         image_frame.pack()
 
+        select_interval_button = ModernRoundedButton(main_frame, text="Select Multiple Images", width=180, height=50)
+        select_interval_button.pack(pady=10, padx=650)
+
         display_images()
 
     def process_video(file_path):
@@ -305,11 +309,11 @@ def display_main_page(root):
         
         # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {file_path}")
-        alt_texts, output_direcs, html_file = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
+        alt_texts, output_direcs, html_file, output_dir = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
         
         # Begin manual image selection
         print("LOG: Beginning manual image selection")
-        image_selection(alt_texts, output_direcs, html_file)
+        image_selection(alt_texts, output_direcs, html_file,output_dir)
 
     # Clear the main frame and reinitialize the main page
     def go_back_to_main_page():

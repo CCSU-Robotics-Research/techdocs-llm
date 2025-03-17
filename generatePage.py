@@ -4,6 +4,7 @@ import markdown
 import os
 import re
 from tkinter import filedialog
+import shutil
 # Using a markdown file, generate an HTML page as output
 def generate_page(markdown_path):
 
@@ -78,17 +79,34 @@ def generate_page(markdown_path):
     #     os.makedirs(output_dir)
 
     # Generate the output path for the HTML file
+   
     markdown_filename = os.path.splitext(os.path.basename(markdown_path))[0]
-    folder_for_file_path = os.makedirs(f"{markdown_filename}-Folder")
-    folder_path = os.path.join(folder_selected,folder_for_file_path)
-    output_path = os.path.join(folder_path, f"{markdown_filename}.html")
+    print("markdown_filename: ", markdown_filename)
+    full_path = os.path.join(folder_selected,f"{markdown_filename}-Folder")
+    try:
+        folder_for_file_path = os.makedirs(full_path)
+        folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
+        print("FOLDER_FOR_FILE_PATH: ", folder_for_file_path)
+    except FileExistsError:
+        folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
+        shutil.rmtree(folder_for_file_path)
+        #os.makedirs(f"{folder_selected}/{markdown_filename}-Folder")
+        print(f"One or more directories in '{folder_for_file_path}' already exist.")
+    except PermissionError:
+        print(f"Permission denied: Unable to create '{folder_for_file_path}'.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    #folder_path = os.path.join(folder_selected,folder_for_file_path)
+    #print("FOLDER_PATH:  ", folder_path)
+    output_path = os.path.join(folder_for_file_path,f"{markdown_filename}.html")
+    print("output_path: ", output_path)
 
     # Write the HTML content to a new file
     with open(output_path, 'w') as file:
         file.write(html_page)
 
     # Return the output path
-    return output_path,folder_path
+    return output_path,folder_for_file_path
 
 # Example usage
 # generate_page("temp/test/example.md")
