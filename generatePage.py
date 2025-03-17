@@ -79,14 +79,16 @@ def generate_page(markdown_path):
 
     # Generate the output path for the HTML file
     markdown_filename = os.path.splitext(os.path.basename(markdown_path))[0]
-    output_path = os.path.join(folder_selected, f"{markdown_filename}.html")
+    folder_for_file_path = os.makedirs(f"{markdown_filename}-Folder")
+    folder_path = os.path.join(folder_selected,folder_for_file_path)
+    output_path = os.path.join(folder_path, f"{markdown_filename}.html")
 
     # Write the HTML content to a new file
     with open(output_path, 'w') as file:
         file.write(html_page)
 
     # Return the output path
-    return output_path
+    return output_path,folder_path
 
 # Example usage
 # generate_page("temp/test/example.md")

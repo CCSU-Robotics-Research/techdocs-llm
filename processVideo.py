@@ -15,7 +15,7 @@ def transcode_audio(input_video_path, output_directory, base_filename):
     return audio_output_path
 
 # Extract frames @ 1 FPS at all time intervals specified, returning all output directories in an array
-def interval_frame_extraction(input_video_path, output_directory, base_filename, keyframe_time_intervals):
+def interval_frame_extraction(input_video_path, output_directory, base_filename, keyframe_time_intervals, time_interval):
 
     # Output directories, to be returned at end
     jpg_directories = []
@@ -27,7 +27,7 @@ def interval_frame_extraction(input_video_path, output_directory, base_filename,
         (
             ffmpeg
             .input(input_video_path, ss=start, to=end)
-            .filter("fps", fps=1) # Extract frames at 1 FPS
+            .filter("fps", fps=time_interval) # Extract frames at 1 FPS
             .output(os.path.join(jpg_output_directory, "%d.jpg"), q=2) # Highest image quality
             .run()
         )

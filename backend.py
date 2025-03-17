@@ -43,7 +43,7 @@ def generate_documentation_from_video(input_video_name, full_input_path):
 
     # Generate the HTML page with keyframe placeholders
     print(f"Generating Page....")
-    html_file = generate_page(markdown_path)
+    html_file, selected_folder_path = generate_page(markdown_path)
     print("Page with keyframe placeholders saved to: " + html_file + "\n")
 
     # Send the HTML file and transcription (with timestamps) to OpenAI API to find correct time intervals for image extraction
@@ -51,7 +51,7 @@ def generate_documentation_from_video(input_video_name, full_input_path):
     keyframe_time_intervals = obtain_time_intervals(html_file, transcription, base_filename, temp_output_directory)
 
     # Extract images from the video at the obtained time intervals and capture the directory paths where frames are stored for each interval
-    interval_output_directories = interval_frame_extraction(full_input_path, temp_output_directory, base_filename, keyframe_time_intervals)
+    interval_output_directories = interval_frame_extraction(full_input_path, temp_output_directory, base_filename, keyframe_time_intervals,1)
 
     # Capture alt texts into a single array
     alt_texts = []
