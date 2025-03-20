@@ -152,4 +152,4 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
         print("Time interval data saved to: " + output_file_path + "\n")
 
     # Return the array of tuples
-    return formatted_intervals
+    return formatted_intervals, output_file_path

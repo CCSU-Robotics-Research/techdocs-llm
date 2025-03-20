@@ -90,7 +90,7 @@ def generate_page(markdown_path):
     except FileExistsError:
         folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
         shutil.rmtree(folder_for_file_path)
-        #os.makedirs(f"{folder_selected}/{markdown_filename}-Folder")
+        os.makedirs(f"{folder_selected}/{markdown_filename}-Folder")
         print(f"One or more directories in '{folder_for_file_path}' already exist.")
     except PermissionError:
         print(f"Permission denied: Unable to create '{folder_for_file_path}'.")

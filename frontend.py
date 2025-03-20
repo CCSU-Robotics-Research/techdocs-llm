@@ -8,11 +8,14 @@ from backend import generate_documentation_from_video
 from PIL import Image, ImageTk
 import shutil
 import webbrowser
+import re
 
-global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame
+global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame, state, counter, image_arr, interval_txt
 
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
+
+    
 
     # Creates a ModernRoundedButton
     def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
@@ -218,9 +221,27 @@ def display_main_page(root):
         webbrowser.open_new_tab(output_directory)
         print("LOG: Open HTML")
         
-        
+    def parse_first_time(frame_number, file_path):
+    # Convert frame_number to the format used in the file
+        framestr = f"frame{frame_number}"
+
+        with open(file_path, 'r') as file:
+            file_content = file.read()
+
+        pattern = rf"[{framestr}] (.+)"
+        match = re.search(pattern, file_content)
+
+        if match:
+            line = match.group(1)
+            # Extract the first time number from the line
+            time_match = re.search(r"\d+.\d+", line)
+            if time_match:
+                return float(time_match.group(0))
+        return None
     # Creates the image selection interface
     def image_selection(alt_texts, directories, html_file, output_dir):
+        global state
+        state = False
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -245,6 +266,11 @@ def display_main_page(root):
             return images
 
         def display_images():
+            global counter
+            counter = 0
+            global image_arr
+            image_arr = []
+            
             """Displays the images in a grid and the alt text."""
             nonlocal index
             if index >= len(alt_texts):
@@ -269,13 +295,36 @@ def display_main_page(root):
                 if col >= 4:  # 3 columns per row
                     col = 0
                     row += 1
-
+    
         def select_image(filepath):
-            """Copies the selected image to the output directory and moves to the next set."""
-            nonlocal index
-            shutil.copy(filepath, os.path.join(output_dir, f"frame_{index+1}.jpg"))
-            index += 1
-            display_images()
+            global state
+            global counter
+            global interval_txt
+            global image_arr
+            print(f"filepath: {filepath}")
+            file_num = int(filepath.split("\\")[-1].split(".")[0])
+            print(f"file_num: {file_num}")
+            if (not state):
+                """Copies the selected image to the output directory and moves to the next set."""
+                nonlocal index
+                shutil.copy(filepath, os.path.join(output_dir, f"frame_{index+1}.jpg"))
+                index += 1
+                display_images()
+            else:
+                if (counter<2):
+                    parse =  parse_first_time(index+1,interval_txt)
+                    print("Parsed from txt file is ",parse)
+                    image_arr.append(parse+(file_num-1))
+                    print("IMage arr at counter = ", image_arr[counter])
+                    counter += 1
+                    print("If STATEMENT Counter is ",counter)
+                    #add image to array (might need to check if image is already in array)
+                    if(counter ==2):
+                        print("do something")
+                else:
+                    #do nothing in case button clicked repeatedly
+                    print("Nothing is being done since counter is too big")
+            
 
         alt_label = tk.Label(main_frame, text="", bg="#f4f4f9")
         alt_label.pack(pady=10)
@@ -283,10 +332,19 @@ def display_main_page(root):
         image_frame = tk.Frame(main_frame)
         image_frame.pack()
 
-        select_interval_button = ModernRoundedButton(main_frame, text="Select Multiple Images", width=180, height=50)
-        select_interval_button.pack(pady=10, padx=650)
+        select_interval_button = ModernRoundedButton(main_frame, command=lambda: changeState(),text="Select Multiple Images", width=180, height=50)
+        select_interval_button.pack(pady=10)
+        
 
         display_images()
+        
+    def changeState():
+        global state
+        global counter
+        if not state:
+            counter = 0
+        print(f"state = {state} clicked changed to {not state}")
+        state = not state
 
     def process_video(file_path):
         # Remove the confirmation page and display the processing video label
@@ -309,8 +367,9 @@ def display_main_page(root):
         
         # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {file_path}")
-        alt_texts, output_direcs, html_file, output_dir = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
-        
+        alt_texts, output_direcs, html_file, output_dir, time_interval_txt = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
+        global interval_txt
+        interval_txt = time_interval_txt
         # Begin manual image selection
         print("LOG: Beginning manual image selection")
         image_selection(alt_texts, output_direcs, html_file,output_dir)
