@@ -314,6 +314,7 @@ def display_main_page(root):
                 if (counter<2):
                     parse =  parse_first_time(index+1,interval_txt)
                     print("Parsed from txt file is ",parse)
+                    print("Time: ", parse+(file_num-1))
                     image_arr.append(parse+(file_num-1))
                     print("IMage arr at counter = ", image_arr[counter])
                     counter += 1
