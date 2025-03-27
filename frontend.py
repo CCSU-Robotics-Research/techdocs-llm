@@ -221,23 +221,23 @@ def display_main_page(root):
         webbrowser.open_new_tab(output_directory)
         print("LOG: Open HTML")
         
-    def parse_first_time(frame_number, file_path):
-    # Convert frame_number to the format used in the file
-        framestr = f"frame{frame_number}"
+    def parse_first_time(frame_number: int, file_content: str) -> float:
+        print("Filecontent",file_content)
+        with open(file_content, 'r') as file:
+            lines = file.readlines()
+        print(lines)
+      
+        for line in lines:
+         if f"[frame_{frame_number}]" in line:
+            parts = line.split(']')
+            if len(parts) > 1:
+                time_part = parts[1].strip().split('-')[0]
+                try:
+                    return float(time_part)
+                except ValueError:
+                    raise ValueError(f"Invalid time format in frame {frame_number}")
 
-        with open(file_path, 'r') as file:
-            file_content = file.read()
-
-        pattern = rf"[{framestr}] (.+)"
-        match = re.search(pattern, file_content)
-
-        if match:
-            line = match.group(1)
-            # Extract the first time number from the line
-            time_match = re.search(r"\d+.\d+", line)
-            if time_match:
-                return float(time_match.group(0))
-        return None
+        raise ValueError(f"Frame {frame_number} not found in the content")
     # Creates the image selection interface
     def image_selection(alt_texts, directories, html_file, output_dir):
         global state
