@@ -62,3 +62,9 @@ def generate_documentation_from_video(input_video_name, full_input_path):
 
     # Return the image descriptions, file paths to the image directories, and the HTML file to the frontend
     return alt_texts, interval_output_directories, html_file, selected_folder_path, interval_time_txt
+
+def generate_new_images(input_video_path,input_video_name,keyframe_time_intervals, time_interval):
+    base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
+    date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
+    return interval_frame_extraction(input_video_path,temp_output_directory,base_filename,keyframe_time_intervals,time_interval)

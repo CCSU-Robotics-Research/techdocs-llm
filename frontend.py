@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from backend import generate_documentation_from_video
+from backend import generate_new_images
 from PIL import Image, ImageTk
 import shutil
 import webbrowser
@@ -14,9 +15,6 @@ global canvas_frame, button_frame, confirmation_label, filename_label, action_bu
 
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
-
-    
-
     # Creates a ModernRoundedButton
     def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
         super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat", bg=bg)
@@ -321,7 +319,21 @@ def display_main_page(root):
                     print("If STATEMENT Counter is ",counter)
                     #add image to array (might need to check if image is already in array)
                     if(counter ==2):
-                        print("do something")
+                        image_arr_tuple = []
+                        time_interval = 0
+                        if(image_arr[1]>image_arr[0]):
+                            image_arr_tuple = [(f"frame_{index+1}","",image_arr[0],image_arr[1])]
+                            time_interval = round((image_arr[1] - image_arr[0])/9)
+                        else:
+                            image_arr_tuple = [(f"frame{index+1}","",image_arr[1],image_arr[0])]
+                            time_interval = round((image_arr[0] - image_arr[1])/9)
+                        if time_interval < 1:
+                            time_interval = 1
+                        test = generate_new_images(filepath,filepath[filepath.rfind("/") +1:],image_arr_tuple,time_interval)
+                        print("Return of interval_frame_extraction here: ", test)
+                        #generate_new_images(images_arr)
+                        #print("do something",images_arr)
+
                 else:
                     #do nothing in case button clicked repeatedly
                     print("Nothing is being done since counter is too big")

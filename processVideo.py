@@ -16,7 +16,7 @@ def transcode_audio(input_video_path, output_directory, base_filename):
 
 # Extract frames @ 1 FPS at all time intervals specified, returning all output directories in an array
 def interval_frame_extraction(input_video_path, output_directory, base_filename, keyframe_time_intervals, time_interval):
-
+    print(f"input_video_path: {input_video_path}\noutput_directory: {output_directory}\nbase_filename: {base_filename}\nkeyframe_time_intervals: {keyframe_time_intervals}\ntime_interval: {time_interval}")
     # Output directories, to be returned at end
     jpg_directories = []
 
