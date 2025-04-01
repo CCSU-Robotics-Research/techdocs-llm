@@ -11,7 +11,7 @@ import shutil
 import webbrowser
 import re
 
-global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame, state, counter, image_arr, interval_txt
+global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame, state, counter, timestamp_arr, interval_txt
 
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
@@ -116,28 +116,30 @@ def display_main_page(root):
 
     # Opens the system file explorer for uploading a video
     def browse_files():
-        file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
-        handle_file_upload(file_path)
+        global video_path
+        video_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.mov *.avi *.mkv")])
+        handle_file_upload(video_path)
 
     # Event handler for dragging a video into the GUI
     def on_drop(event):
-        file_path = event.data.strip("{}")  # Remove curly braces
-        handle_file_upload(file_path)
+        global video_path
+        video_path = event.data.strip("{}")  # Remove curly braces
+        handle_file_upload(video_path)
 
     # Validate that a file was actually uploaded/selected and that the file type is correct
-    def handle_file_upload(file_path):
-        valid_extensions = [".mp4", ".mov", ".avi", ".mkv"]
-        _, file_extension = os.path.splitext(file_path)
+    def handle_file_upload(video_path):
+        valid_extensions = [".mp4", ".mov", ".avi", ".mkv", ".MOV", ".MP4", ".AVI", ".MKV"]
+        _, file_extension = os.path.splitext(video_path)
 
-        if not file_path:
+        if not video_path:
             print("LOG: File Explorer opened, no file selected")
             show_error_message("You must select a video file to process.")
         elif file_extension.lower() not in valid_extensions:
-            print(f"LOG: Uploaded Bad File: {file_path}")
+            print(f"LOG: Uploaded Bad File: {video_path}")
             show_error_message("Invalid file. The system only supports video files with extensions .mov, .mp4, .avi, and .mkv.")
         else:
-            print(f"LOG: Uploaded Video File: {file_path}")
-            show_confirmation_message(file_path)
+            print(f"LOG: Uploaded Video File: {video_path}")
+            show_confirmation_message(video_path)
 
     # Error message page with a custom error message for invalid file uploads
     def show_error_message(error_message):
@@ -155,10 +157,10 @@ def display_main_page(root):
         back_button.pack(pady=10)
 
     # Page to confirm from user that the selected video is what they want processed
-    def show_confirmation_message(file_path):
+    def show_confirmation_message(video_path):
 
         # Extract filename from file path
-        filename = file_path.split("/")[-1]
+        filename = video_path.split("/")[-1]
 
         # Replace drag-and-drop box with confirmation message
         canvas_frame.pack_forget()
@@ -171,7 +173,7 @@ def display_main_page(root):
 
         # Video filename label
         global filename_label
-        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {file_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
+        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {video_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
         filename_label.pack(pady=5)
         
         # Action buttons
@@ -186,7 +188,7 @@ def display_main_page(root):
 
         # Start video processing button
         global process_button
-        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(file_path), width=180, height=50)
+        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
 
     # Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
@@ -215,16 +217,14 @@ def display_main_page(root):
                                             width=180, height=50)
         back_button.pack(pady=10)
 
-        #Opens HTML File to web browser
+        # Opens HTML File to web browser
         webbrowser.open_new_tab(output_directory)
         print("LOG: Open HTML")
         
-    def parse_first_time(frame_number: int, file_content: str) -> float:
-        print("Filecontent",file_content)
+    # Function to parse the first time from the text file
+    def parse_first_time(frame_number, file_content):
         with open(file_content, 'r') as file:
             lines = file.readlines()
-        print(lines)
-      
         for line in lines:
          if f"[frame_{frame_number}]" in line:
             parts = line.split(']')
@@ -234,42 +234,40 @@ def display_main_page(root):
                     return float(time_part)
                 except ValueError:
                     raise ValueError(f"Invalid time format in frame {frame_number}")
-
+        file.close()
         raise ValueError(f"Frame {frame_number} not found in the content")
+    
     # Creates the image selection interface
     def image_selection(alt_texts, directories, html_file, output_dir):
         global state
         state = False
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-
         index = 0  # Current index of alt_texts and directories
         
-        
-
         def load_images(directory):
-            """Loads images from a directory and returns a list of PhotoImage objects."""
+            # Loads images from a directory and returns a list of PhotoImage objects
             images = []
             for filename in os.listdir(directory):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    filepath = os.path.join(directory, filename)
+                    img_path = os.path.join(directory, filename)
                     try:
-                        image = Image.open(filepath)
+                        image = Image.open(img_path)
                         width, height = image.size
                         image = image.resize((width//10, height//10), Image.Resampling.LANCZOS)  # Resize images
                         photo = ImageTk.PhotoImage(image)
-                        images.append((photo, filepath))
+                        images.append((photo, img_path))
                     except Exception as e:
-                        print(f"Error loading image: {filepath}, {e}")
+                        print(f"ERROR: Error loading image: {img_path}, {e}")
             return images
 
         def display_images():
             global counter
             counter = 0
-            global image_arr
-            image_arr = []
+            global timestamp_arr
+            timestamp_arr = []
             
-            """Displays the images in a grid and the alt text."""
+            # Displays the images in a grid and the alt text
             nonlocal index
             if index >= len(alt_texts):
                 show_success_message(html_file)
@@ -281,62 +279,50 @@ def display_main_page(root):
             for widget in image_frame.winfo_children():
                 widget.destroy()
 
-            
-
             images = load_images(directories[index])
             row, col = 0, 0
-            for photo, filepath in images:
-                button = tk.Button(image_frame, image=photo, command=lambda f=filepath: select_image(f))
+            for photo, img_path in images:
+                button = tk.Button(image_frame, image=photo, command=lambda f=img_path: select_image(f))
                 button.image = photo  # Keep a reference to prevent garbage collection
                 button.grid(row=row, column=col, padx=5, pady=5)
                 col += 1
-                if col >= 4:  # 3 columns per row
+                if col >= 4:  # 4 columns per row
                     col = 0
                     row += 1
     
-        def select_image(filepath):
+        def select_image(img_path):
             global state
             global counter
             global interval_txt
-            global image_arr
-            print(f"filepath: {filepath}")
-            file_num = int(filepath.split("\\")[-1].split(".")[0])
-            print(f"file_num: {file_num}")
+            global timestamp_arr
+            
+            file_num = int(os.path.splitext(os.path.basename(img_path))[0])
             if (not state):
-                """Copies the selected image to the output directory and moves to the next set."""
+                # Copies the selected image to the output directory and moves to the next set
                 nonlocal index
-                shutil.copy(filepath, os.path.join(output_dir, f"frame_{index+1}.jpg"))
+                shutil.copy(img_path, os.path.join(output_dir, f"frame_{index+1}.jpg"))
                 index += 1
                 display_images()
             else:
-                if (counter<2):
+                if counter < 2:
                     parse =  parse_first_time(index+1,interval_txt)
-                    print("Parsed from txt file is ",parse)
-                    print("Time: ", parse+(file_num-1))
-                    image_arr.append(parse+(file_num-1))
-                    print("IMage arr at counter = ", image_arr[counter])
+                    timestamp_arr.append(parse+(file_num-1))
                     counter += 1
-                    print("If STATEMENT Counter is ",counter)
-                    #add image to array (might need to check if image is already in array)
-                    if(counter ==2):
-                        image_arr_tuple = []
-                        time_interval = 0
-                        if(image_arr[1]>image_arr[0]):
-                            image_arr_tuple = [(f"frame_{index+1}","",image_arr[0],image_arr[1])]
-                            time_interval = round((image_arr[1] - image_arr[0])/9)
-                        else:
-                            image_arr_tuple = [(f"frame{index+1}","",image_arr[1],image_arr[0])]
-                            time_interval = round((image_arr[0] - image_arr[1])/9)
-                        if time_interval < 1:
-                            time_interval = 1
-                        test = generate_new_images(filepath,filepath[filepath.rfind("/") +1:],image_arr_tuple,time_interval)
-                        print("Return of interval_frame_extraction here: ", test)
-                        #generate_new_images(images_arr)
-                        #print("do something",images_arr)
+
+                    if counter == 2:
+                        fps = 1
+                        sorted_times = sorted(timestamp_arr)
+                        timestamp_arr_tuple = [(f"frame_{index+1}", "", *sorted_times)]
+                        time_difference = sorted_times[1] - sorted_times[0]
+                        
+                        # Calculate frames per second to get 9 images in the interval
+                        fps = 9 / time_difference if time_difference != 0 else float('inf')
+                        generate_new_images(video_path,video_path[video_path.rfind("/") +1:],timestamp_arr_tuple,fps)
+                        state = not state
+                        display_images()
 
                 else:
-                    #do nothing in case button clicked repeatedly
-                    print("Nothing is being done since counter is too big")
+                    print("LOG: Nothing is being done since counter is too big")
             
 
         alt_label = tk.Label(main_frame, text="", bg="#f4f4f9")
@@ -356,10 +342,9 @@ def display_main_page(root):
         global counter
         if not state:
             counter = 0
-        print(f"state = {state} clicked changed to {not state}")
         state = not state
 
-    def process_video(file_path):
+    def process_video(video_path):
         # Remove the confirmation page and display the processing video label
         print("LOG: Removing Confirmation Page")
         global confirmation_label, filename_label, action_button_frame, back_button, process_button
@@ -379,10 +364,10 @@ def display_main_page(root):
 
         
         # Process the video and obtain image descriptions, directories, and html file
-        print(f"LOG: Processing Video from GUI: {file_path}")
-        alt_texts, output_direcs, html_file, output_dir, time_interval_txt = generate_documentation_from_video(file_path[file_path.rfind("/") +1:], file_path)
+        print(f"LOG: Processing Video from GUI: {video_path}")
+        alt_texts, output_direcs, html_file, output_dir, fps_txt = generate_documentation_from_video(video_path[video_path.rfind("/") +1:], video_path)
         global interval_txt
-        interval_txt = time_interval_txt
+        interval_txt = fps_txt
         # Begin manual image selection
         print("LOG: Beginning manual image selection")
         image_selection(alt_texts, output_direcs, html_file,output_dir)

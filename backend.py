@@ -28,29 +28,30 @@ def generate_documentation_from_video(input_video_name, full_input_path):
         except PermissionError:
             print("LOG: Permission denied. Try running with sudo.")
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"ERROR: {e}")
 
     # Begin processing the video. First transcode the video and transcribe the audio with timestamps included
-    print(f"Starting to process '{input_video_name}' located at '{full_input_path}'.")
+    print(f"LOG: Starting to process '{input_video_name}' located at '{full_input_path}'.")
     base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
     date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    global temp_output_directory
     temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
     audio_path = preliminary_video_processing(full_input_path, base_filename, temp_output_directory)
-    print("Audio and video transcode complete.\n")
+    print("LOG: Audio and video transcode complete.\n")
 
     # Obtain the markdown and transcription files
     markdown_path, transcription = transcribe(audio_path)
 
     # Generate the HTML page with keyframe placeholders
-    print(f"Generating Page....")
+    print(f"LOG: Generating Page....")
     html_file, selected_folder_path = generate_page(markdown_path)
-    print("Page with keyframe placeholders saved to: " + html_file + "\n")
+    print("LOG: Page with keyframe placeholders saved to: " + html_file + "\n")
 
     # Send the HTML file and transcription (with timestamps) to OpenAI API to find correct time intervals for image extraction
-    print("Beginning interval frame extraction...")
+    print("LOG: Beginning interval frame extraction...")
     keyframe_time_intervals, interval_time_txt = obtain_time_intervals(html_file, transcription, base_filename, temp_output_directory)
 
-    # Extract images from the video at the obtained time intervals and capture the directory paths where frames are stored for each interval
+    # Extract images from the video at the obtained time intervals and capture the directory paths where frames are stored for each interval    
     interval_output_directories = interval_frame_extraction(full_input_path, temp_output_directory, base_filename, keyframe_time_intervals,1)
 
     # Capture alt texts into a single array
@@ -58,13 +59,11 @@ def generate_documentation_from_video(input_video_name, full_input_path):
     for (_, alt, _, _) in keyframe_time_intervals:
         alt_texts.append(alt)
 
-    print("Interval frame extraction complete.\n")
+    print("LOG: Interval frame extraction complete")
 
     # Return the image descriptions, file paths to the image directories, and the HTML file to the frontend
     return alt_texts, interval_output_directories, html_file, selected_folder_path, interval_time_txt
 
 def generate_new_images(input_video_path,input_video_name,keyframe_time_intervals, time_interval):
     base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
-    date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-    temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
     return interval_frame_extraction(input_video_path,temp_output_directory,base_filename,keyframe_time_intervals,time_interval)
