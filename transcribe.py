@@ -7,7 +7,7 @@ import json
 client = OpenAI() # Instance to access OpenAI API
 
 # Transcribes an audio file into a transcription with timestamps and generates a markdown file
-def transcribe(audio_file_path):
+def transcribe(audio_file_path, prompt):
 
     # Split file into 10-min segments
     audio_file = AudioSegment.from_mp3(audio_file_path)
@@ -43,7 +43,9 @@ def transcribe(audio_file_path):
         print("Transcription saved to: " + output_file_path)
 
     # Turn transcription into work documentation. First create messages to send to OpenAI API
-    system_prompt = "You are a lab technician in an industrial robotics research lab working with ABB robots. Your job is to create work documentation based on transcriptions of video tutorials recorded in the lab. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5. Work documentation should be created using the markdown language."
+    
+    instructions = "Your job is to create work documentation based on transcriptions of video tutorials recorded in the lab. Work documentation should be created using the markdown language."
+    system_prompt = prompt + instructions
     llm_messages = [
         {
             "role": "system",

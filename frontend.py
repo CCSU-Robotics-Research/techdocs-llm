@@ -185,10 +185,19 @@ def display_main_page(root):
         global back_button
         back_button = ModernRoundedButton(action_button_frame, text = "No, Back to Main Page", command=go_back_to_main_page, width=180, height=50)
         back_button.grid(row=0, column=0, padx=10)
+        
+        text_widget = tk.Text(main_frame, height=10, width=50)
+        text_widget.pack(padx=10, pady=10)
+
+        # Insert default text
+        text_widget.insert("1.0", "You are a lab technician in an industrial robotics research lab working with ABB robots. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5.")
+
+        prompt = text_widget.get("1.0", "end-1c")  # From line 1, char 0 to end (minus last newline)
+    
 
         # Start video processing button
         global process_button
-        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path), width=180, height=50)
+        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path, prompt), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
 
     # Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
@@ -348,10 +357,10 @@ def display_main_page(root):
             counter = 0
         state = not state
 
-    def process_video(video_path):
+    def process_video(video_path, prompt):
         # Remove the confirmation page and display the processing video label
         print("LOG: Removing Confirmation Page")
-        global confirmation_label, filename_label, action_button_frame, back_button, process_button
+        global confirmation_label, filename_label, action_button_frame, back_button, process_button, text_widget
         confirmation_label.pack_forget()
         filename_label.pack_forget()
         action_button_frame.pack_forget()
@@ -369,7 +378,7 @@ def display_main_page(root):
         
         # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {video_path}")
-        alt_texts, output_direcs, html_file, output_dir, fps_txt = generate_documentation_from_video(video_path[video_path.rfind("/") +1:], video_path)
+        alt_texts, output_direcs, html_file, output_dir, fps_txt = generate_documentation_from_video(video_path[video_path.rfind("/") +1:], video_path, prompt)
         global interval_txt
         interval_txt = fps_txt
         # Begin manual image selection

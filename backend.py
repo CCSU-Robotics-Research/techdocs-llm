@@ -12,7 +12,7 @@ from datetime import datetime
 from generatePage import generate_page
 
 # Given an input video from the GUI, process it into work instructions
-def generate_documentation_from_video(input_video_name, full_input_path):
+def generate_documentation_from_video(input_video_name, full_input_path, prompt):
 
     # Ensure the input file path exists
     if not os.path.exists(full_input_path):
@@ -42,7 +42,7 @@ def generate_documentation_from_video(input_video_name, full_input_path):
     print("LOG: Audio and video transcode complete.\n")
 
     # Obtain the markdown and transcription files
-    markdown_path, transcription = transcribe(audio_path)
+    markdown_path, transcription = transcribe(audio_path, prompt)
 
     # Generate the HTML page with keyframe placeholders
     print(f"LOG: Generating Page....")
