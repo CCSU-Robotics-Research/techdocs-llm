@@ -6,10 +6,10 @@ from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from backend import generate_documentation_from_video
 from backend import generate_new_images
+from backend import convert_html
 from PIL import Image, ImageTk
 import shutil
 import webbrowser
-import re
 
 global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame, state, counter, timestamp_arr, interval_txt
 
@@ -216,7 +216,10 @@ def display_main_page(root):
         back_button = ModernRoundedButton(main_frame, text="Back to Main Page", command=go_back_to_main_page,
                                             width=180, height=50)
         back_button.pack(pady=10)
-
+        
+        # Convert HTML to PDF
+        convert_html(output_directory)
+        
         # Opens HTML File to web browser
         webbrowser.open_new_tab(output_directory)
         print("LOG: Open HTML")
@@ -317,6 +320,7 @@ def display_main_page(root):
                         
                         # Calculate frames per second to get 9 images in the interval
                         fps = 9 / time_difference if time_difference != 0 else float('inf')
+                        print(f"LOG: FPS: {fps}")
                         generate_new_images(video_path,video_path[video_path.rfind("/") +1:],timestamp_arr_tuple,fps)
                         state = not state
                         display_images()

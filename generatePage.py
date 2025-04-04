@@ -25,7 +25,7 @@ def generate_page(markdown_path):
         alt_text = match.group(1) or f"Image {image_counter} - No description provided"  # Fallback text if alt is empty
         placeholder = f'frame_{image_counter}.jpg'
         image_counter += 1
-        return f'<img src="{placeholder}" alt="{alt_text}" class="border-2 border-gray-300 rounded-lg my-4" style="max-width: 100%; height: auto;">'
+        return f'<img src="{placeholder}" alt="{alt_text}" style="max-width: 100%; height: auto; border: 2px solid #d1d5db; border-radius: 0.5rem; margin: 1rem 0;">'
 
     # Replace image placeholders with numbered HTML img tags
     # Updated regex to better handle various markdown image formats
@@ -45,20 +45,33 @@ def generate_page(markdown_path):
     <head>
         <meta charset="UTF-8">
         <title>Technical Documentation</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.3/base.min.css">
-        <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/components.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.13/src/index.min.js">
-        <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/utilities.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
         <style>
             body {{
                 font-family: 'Inter', sans-serif;
+                background-color: #f9fafb; /* Tailwind gray-50 */
+                color: #1f2937;            /* Tailwind gray-800 */
+                padding: 2rem;
+                line-height: 1.6;
+            }}
+            .container {{
+                max-width: 64rem;         /* Tailwind max-w-5xl */
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 2rem;
+                margin-bottom: 2rem;
+            }}
+            h1.title {{
+                color: #2563eb;           /* Tailwind blue-600 */
+                text-align: center;
+                font-size: 2rem;
+                margin-bottom: 1rem;
             }}
         </style>
     </head>
-    <body class="bg-gray-50 text-gray-800 p-8">
-        <div class="max-w-5xl mx-auto prose prose-lg my-8">
-            <h1 class="text-blue-600 text-center">Technical Documentation</h1>  <!-- Centered heading with blue color -->
+    <body>
+        <div class="container">
+            <h1 class="title">Technical Documentation</h1>
             {html_content}
         </div>
     </body>

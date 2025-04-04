@@ -26,11 +26,9 @@ def transcribe(audio_file_path):
                                                           model="whisper-1",
                                                           response_format="verbose_json",
                                                           timestamp_granularities=["segment"])
-            #print(response)
             # Correct each transcription segment's timestamps and add the segment to the transcription
             if response.segments:
                 for item in response.segments:
-                    #print(item)
                     start_time = item.start + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
                     end_time = item.end + (i * ten_minutes / 1000) # Adjust timestamps based on segment offset
                     text = item.text.strip()

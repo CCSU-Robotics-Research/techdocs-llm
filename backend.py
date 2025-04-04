@@ -2,6 +2,8 @@
 
 import os
 import shutil
+from weasyprint import HTML
+from pdf2docx import Converter
 from transcribe import transcribe
 from transcribe import obtain_time_intervals
 from processVideo import preliminary_video_processing
@@ -67,3 +69,16 @@ def generate_documentation_from_video(input_video_name, full_input_path):
 def generate_new_images(input_video_path,input_video_name,keyframe_time_intervals, time_interval):
     base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
     return interval_frame_extraction(input_video_path,temp_output_directory,base_filename,keyframe_time_intervals,time_interval)
+
+def convert_html(html_path):
+    output_pdf = html_path.replace(".html", ".pdf")
+    HTML(filename=html_path).write_pdf(output_pdf)
+    print("LOG: PDF conversion complete.")
+    
+    docx_file = output_pdf.replace(".pdf", ".docx")
+
+    # Create a PDF converter object
+    cv = Converter(output_pdf)
+    cv.convert(docx_file, start=0, end=None)  # convert all pages
+    cv.close()
+    print("LOG: DOCX conversion complete.")
