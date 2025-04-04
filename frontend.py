@@ -192,12 +192,12 @@ def display_main_page(root):
         # Insert default text
         text_widget.insert("1.0", "You are a lab technician in an industrial robotics research lab working with ABB robots. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5.")
 
-        prompt = text_widget.get("1.0", "end-1c")  # From line 1, char 0 to end (minus last newline)
+        #prompt = text_widget.get("1.0", "end-1c")  # From line 1, char 0 to end (minus last newline)
     
 
         # Start video processing button
         global process_button
-        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path, prompt), width=180, height=50)
+        process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path, text_widget.get("1.0", "end-1c")), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
 
     # Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page

@@ -43,7 +43,7 @@ def transcribe(audio_file_path, prompt):
         print("Transcription saved to: " + output_file_path)
 
     # Turn transcription into work documentation. First create messages to send to OpenAI API
-    
+    print("PROMPT HERE: ",prompt)
     instructions = "Your job is to create work documentation based on transcriptions of video tutorials recorded in the lab. Work documentation should be created using the markdown language."
     system_prompt = prompt + instructions
     llm_messages = [
