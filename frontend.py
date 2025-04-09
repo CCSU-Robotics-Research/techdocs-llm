@@ -186,16 +186,13 @@ def display_main_page(root):
         back_button = ModernRoundedButton(action_button_frame, text = "No, Back to Main Page", command=go_back_to_main_page, width=180, height=50)
         back_button.grid(row=0, column=0, padx=10)
         
+        global text_widget
         text_widget = tk.Text(main_frame, height=10, width=50)
         text_widget.pack(padx=10, pady=10)
 
         # Insert default text
         text_widget.insert("1.0", "You are a lab technician in an industrial robotics research lab working with ABB robots. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5.")
 
-        #prompt = text_widget.get("1.0", "end-1c")  # From line 1, char 0 to end (minus last newline)
-    
-
-        # Start video processing button
         global process_button
         process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path, text_widget.get("1.0", "end-1c")), width=180, height=50)
         process_button.grid(row=0, column=1, padx=10)
@@ -367,7 +364,7 @@ def display_main_page(root):
         back_button.pack_forget()
         process_button.pack_forget()
         instruction_frame.pack_forget()
-        
+        text_widget.pack_forget()
         # Add processing video label and select image label
         # print("LOG: Adding processing video label")
         # process_label = tk.Label(main_frame, text="Processing Video...", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
