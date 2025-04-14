@@ -110,7 +110,7 @@ def display_main_page(root):
         browse_button.pack()
 
         # Footer Section
-        footer = tk.Label(main_frame, text="© 2024 The CS MJRS Team | CCSU Robotics Research", font=("Segoe UI", 10),
+        footer = tk.Label(main_frame, text="© 2025 Team P3M | CCSU Robotics Research", font=("Segoe UI", 10),
                           bg="#f4f4f9", fg="#999999", pady=10)
         footer.pack(side=tk.BOTTOM, fill=tk.X)
 
@@ -369,7 +369,7 @@ def display_main_page(root):
         # print("LOG: Adding processing video label")
         # process_label = tk.Label(main_frame, text="Processing Video...", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
         # process_label.pack(pady=20)
-        select_image_label = tk.Label(main_frame, text="Select an image:", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        select_image_label = tk.Label(main_frame, text='Directions: \n 1. Select the image that best represents the prompt. \n 2. If none of the images seem right, click "Select Multiple Images". \n 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.', font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
         select_image_label.pack(pady=10)
 
         
