@@ -270,18 +270,21 @@ def display_main_page(root):
                         print(f"ERROR: Error loading image: {img_path}, {e}")
             return images
 
-        def display_images():
+        def display_images(fps):
             global counter
             counter = 0
             global timestamp_arr
             timestamp_arr = []
+            print(timestamp_arr)
             
             # Displays the images in a grid and the alt text
             nonlocal index
+            print("INdex",index)
+            print("Alt",alt_texts)
             if index >= len(alt_texts):
                 show_success_message(html_file)
                 return
-
+            parse =  parse_first_time(index+1,interval_txt)
             alt_label.config(text=alt_texts[index])
 
             # Clear existing buttons
@@ -294,6 +297,11 @@ def display_main_page(root):
                 button = tk.Button(image_frame, image=photo, command=lambda f=img_path: select_image(f))
                 button.image = photo  # Keep a reference to prevent garbage collection
                 button.grid(row=row, column=col, padx=5, pady=5)
+               
+                label = tk.Label(image_frame, text=str(parse))
+                label.grid(row=row * 2 + 1, column=col, padx=5, pady=(0, 10))
+               
+                parse +=fps
                 col += 1
                 if col >= 4:  # 4 columns per row
                     col = 0
@@ -311,7 +319,9 @@ def display_main_page(root):
                 nonlocal index
                 shutil.copy(img_path, os.path.join(output_dir, f"frame_{index+1}.jpg"))
                 index += 1
-                display_images()
+                #parse =  parse_first_time(index+1,interval_txt)
+
+                display_images(1)
             else:
                 if counter < 2:
                     parse =  parse_first_time(index+1,interval_txt)
@@ -329,7 +339,7 @@ def display_main_page(root):
                         print(f"LOG: FPS: {fps}")
                         generate_new_images(video_path,video_path[video_path.rfind("/") +1:],timestamp_arr_tuple,fps)
                         state = not state
-                        display_images()
+                        display_images(fps)
 
                 else:
                     print("LOG: Nothing is being done since counter is too big")
@@ -345,7 +355,7 @@ def display_main_page(root):
         select_interval_button.pack(pady=10)
         
 
-        display_images()
+        display_images(1)
         
     def changeState():
         global state
