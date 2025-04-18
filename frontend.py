@@ -264,8 +264,15 @@ def display_main_page(root):
                     img_path = os.path.join(directory, filename)
                     try:
                         image = Image.open(img_path)
-                        width, height = image.size
-                        image = image.resize((width//10, height//10), Image.Resampling.LANCZOS)  # Resize images
+
+                        # Dynamically calculate the new height as half the vertical window size
+                        screen_height = main_frame.winfo_toplevel().winfo_height()
+                        new_height = screen_height // 2
+                        aspect_ratio = image.width / image.height
+                        new_width = int(new_height * aspect_ratio)
+
+                        # Resize the image
+                        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
                         photo = ImageTk.PhotoImage(image)
                         images.append((photo, img_path))
                     except Exception as e:
@@ -293,17 +300,40 @@ def display_main_page(root):
             for widget in image_frame.winfo_children():
                 widget.destroy()
 
+            # Create a scrollable frame for images
+            canvas = tk.Canvas(main_frame, bg="#f4f4f9", highlightthickness=0)
+            scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg="#f4f4f9")
+
+            # Configure the scrollable frame
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+
+            # Add the scrollable frame to the canvas
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Pack the canvas and scrollbar
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+            # Enable scrolling with the mouse wheel
+            canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(-1 * (e.delta // 120), "units"))
+
+            # Display images in the scrollable frame
             images = load_images(directories[index])
             row, col = 0, 0
             for photo, img_path in images:
-                button = tk.Button(image_frame, image=photo, command=lambda f=img_path: select_image(f))
+                button = tk.Button(scrollable_frame, image=photo, command=lambda f=img_path: select_image(f))
                 button.image = photo  # Keep a reference to prevent garbage collection
                 button.grid(row=row, column=col, padx=5, pady=5)
-               
-                label = tk.Label(image_frame, text=str(parse))
+
+                label = tk.Label(scrollable_frame, text=str(parse))
                 label.grid(row=row * 2 + 1, column=col, padx=5, pady=(0, 10))
-               
-                parse +=fps
+
+                parse += fps
                 col += 1
                 if col >= 4:  # 4 columns per row
                     col = 0
