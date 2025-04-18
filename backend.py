@@ -49,6 +49,9 @@ def generate_documentation_from_video(input_video_name, full_input_path, prompt)
     html_file, selected_folder_path = generate_page(markdown_path)
     print("LOG: Page with keyframe placeholders saved to: " + html_file + "\n")
 
+    return html_file, selected_folder_path, transcription, base_filename, full_input_path
+
+def extract_interval_frames(base_filename, full_input_path, transcription, html_file):
     # Send the HTML file and transcription (with timestamps) to OpenAI API to find correct time intervals for image extraction
     print("LOG: Beginning interval frame extraction...")
     keyframe_time_intervals, interval_time_txt = obtain_time_intervals(html_file, transcription, base_filename, temp_output_directory)
@@ -64,7 +67,8 @@ def generate_documentation_from_video(input_video_name, full_input_path, prompt)
     print("LOG: Interval frame extraction complete")
 
     # Return the image descriptions, file paths to the image directories, and the HTML file to the frontend
-    return alt_texts, interval_output_directories, html_file, selected_folder_path, interval_time_txt
+    return alt_texts, interval_output_directories, interval_time_txt
+    #output_direcs,
 
 def generate_new_images(input_video_path,input_video_name,keyframe_time_intervals, time_interval):
     base_filename = os.path.splitext(os.path.basename(input_video_name))[0]

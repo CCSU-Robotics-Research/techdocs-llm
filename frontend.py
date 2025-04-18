@@ -4,9 +4,11 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
+from tkinterweb import HtmlFrame
 from backend import generate_documentation_from_video
 from backend import generate_new_images
 from backend import convert_html
+from backend import extract_interval_frames
 from PIL import Image, ImageTk
 import shutil
 import webbrowser
@@ -344,17 +346,19 @@ def display_main_page(root):
                 else:
                     print("LOG: Nothing is being done since counter is too big")
             
-
+        select_image_label = tk.Label(main_frame, text="Select an image:", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        select_image_label = tk.Label(main_frame, text='Directions: \n 1. Select the image that best represents the prompt. \n 2. If none of the images seem right, click "Select Multiple Images". \n 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.', font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        select_image_label.pack(pady=10)
         alt_label = tk.Label(main_frame, text="", bg="#f4f4f9")
         alt_label.pack(pady=10)
-
+        
         image_frame = tk.Frame(main_frame)
         image_frame.pack()
-
+        
         select_interval_button = ModernRoundedButton(main_frame, command=lambda: changeState(),text="Select Multiple Images", width=180, height=50)
         select_interval_button.pack(pady=10)
         
-
+        
         display_images(1)
         
     def changeState():
@@ -379,18 +383,45 @@ def display_main_page(root):
         # print("LOG: Adding processing video label")
         # process_label = tk.Label(main_frame, text="Processing Video...", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
         # process_label.pack(pady=20)
-        select_image_label = tk.Label(main_frame, text='Directions: \n 1. Select the image that best represents the prompt. \n 2. If none of the images seem right, click "Select Multiple Images". \n 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.', font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        select_image_label.pack(pady=10)
-
         
+        html_file, output_dir, transcr, base_filename, full_input_path = generate_documentation_from_video(video_path[video_path.rfind("/") +1:], video_path, prompt)
+
+        extract_images_button = ModernRoundedButton(main_frame, text="Extract Images", command=lambda: extract_images(base_filename, full_input_path, transcr, html_file, output_dir), width=180, height=50)
+        extract_images_button.pack(pady=10)
+        back_button = ModernRoundedButton(main_frame, text="Back to prompting", command=lambda: show_confirmation_message(video_path), width=180, height=50)
+        back_button.pack(padx=10, pady=10)
+
+        html_page = HtmlFrame(main_frame)
+        html_page.pack(fill="both", expand=True)
+        html_page.load_file(html_file)
+        # test_label = tk.Label(main_frame, text="TEST TEST TEST", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        # test_label.pack(pady=20)
+        
+        print(f"LOG: Add HTML file to page here: {html_file}")
         # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {video_path}")
-        alt_texts, output_direcs, html_file, output_dir, fps_txt = generate_documentation_from_video(video_path[video_path.rfind("/") +1:], video_path, prompt)
-        global interval_txt
-        interval_txt = fps_txt
+        #alt_texts, output_direcs, fps_txt = extract_interval_frames(base_filename, full_input_path, transcr, html_file)
+        #abcd_label = tk.Label(main_frame, text="ABCD ABCD ABCD", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        #abcd_label.pack(pady=20)
+        # global interval_txt
+        # interval_txt = fps_txt
+        # # Begin manual image selection
+        # print("LOG: Beginning manual image selection")
+        # image_selection(alt_texts, output_direcs, html_file,output_dir)
+
+    def extract_images(base_filename, full_input_path, transcr, html_file, output_dir):
+        for widget in main_frame.winfo_children():
+            widget.destroy()
+        extract_interval_frames
+
+
         # Begin manual image selection
         print("LOG: Beginning manual image selection")
+        alt_texts, output_direcs, fps_txt = extract_interval_frames(base_filename, full_input_path, transcr, html_file)
+        global interval_txt
+        interval_txt = fps_txt
         image_selection(alt_texts, output_direcs, html_file,output_dir)
+
 
     # Clear the main frame and reinitialize the main page
     def go_back_to_main_page():
