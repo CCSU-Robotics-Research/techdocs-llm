@@ -13,12 +13,12 @@ from PIL import Image, ImageTk
 import shutil
 import webbrowser
 
-global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame, state, counter, timestamp_arr, interval_txt
+global canvas_frame, button_frame, confirmation_label, filename_label, action_button_frame, back_button, process_button, instruction_frame, state, counter, timestamp_arr, interval_txt, html_frame
 
 # Class to declare a custom ModernRoundedButton
 class ModernRoundedButton(tk.Canvas):
     # Creates a ModernRoundedButton
-    def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#4CAF50", hover_color="#45a049", bg="#f4f4f9"):
+    def __init__(self, parent, text, command=None, width=150, height=50, radius=25, color="#1d5a9a", hover_color="#3476b5", bg="#f4f4f9"):
         super().__init__(parent, width=width, height=height, bd=0, highlightthickness=0, relief="flat", bg=bg)
         self.command = command
         self.color = color
@@ -44,7 +44,7 @@ class ModernRoundedButton(tk.Canvas):
         self.create_arc(self.winfo_width() - self.radius * 2, self.winfo_height() - self.radius * 2, self.winfo_width(), self.winfo_height(), start=270, extent=90, fill=color, outline=color, tags="button")
         self.create_rectangle(self.radius, 0, self.winfo_width() - self.radius, self.winfo_height(), fill=color, outline=color, tags="button")
         self.create_rectangle(0, self.radius, self.winfo_width(), self.winfo_height() - self.radius, fill=color, outline=color, tags="button")
-        self.create_text(self.winfo_width() / 2, self.winfo_height() / 2, text=self.text, fill="white", font=("Segoe UI", 12, "bold"), tags="button")
+        self.create_text(self.winfo_width() / 2, self.winfo_height() / 2, text=self.text, fill="white", font=("Helvetica", 12, "bold"), tags="button")
 
     # Event handlers
 
@@ -76,9 +76,8 @@ def display_main_page(root):
 
     # Construct the main page
     def initialize_main_page():
-
         # Header Section
-        header = tk.Label(main_frame, text="Video to Instruction Manual", font=("Segoe UI", 18, "bold"), bg="#4CAF50",
+        header = tk.Label(main_frame, text="Video to Instruction Manual", font=("Helvetica", 18, "bold"), bg="#1d5a9a",
                           fg="white", pady=10)
         header.pack(fill=tk.X)
 
@@ -88,7 +87,7 @@ def display_main_page(root):
         instruction_frame.pack(fill=tk.X)
         instruction_label = tk.Label(instruction_frame,
                                      text="Drag and drop your video file here or use the button below to select a file.",
-                                     font=("Segoe UI", 12), bg="#f4f4f9", fg="#333333", wraplength=600,
+                                     font=("Helvetica", 12), bg="#f4f4f9", fg="#333333", wraplength=600,
                                      justify="center")
         instruction_label.pack()
 
@@ -99,7 +98,7 @@ def display_main_page(root):
         canvas = tk.Canvas(canvas_frame, bg="#e8e8e8", highlightthickness=0, width=500, height=200, bd=0)
         canvas.pack()
         canvas.create_rectangle(10, 10, 490, 190, fill="#ffffff", outline="#dddddd", width=2)
-        canvas.create_text(250, 100, text="Drag and Drop Video Here", font=("Segoe UI", 14, "italic"), fill="#bbbbbb")
+        canvas.create_text(250, 100, text="Drag and Drop Video Here", font=("Helvetica", 14, "italic"), fill="#bbbbbb")
         canvas.drop_target_register(DND_FILES)
         canvas.dnd_bind('<<Drop>>', on_drop)
 
@@ -112,7 +111,7 @@ def display_main_page(root):
         browse_button.pack()
 
         # Footer Section
-        footer = tk.Label(main_frame, text="© 2025 Team P3M | CCSU Robotics Research", font=("Segoe UI", 10),
+        footer = tk.Label(main_frame, text="© 2025 Team P3M | CCSU Robotics Research", font=("Helvetica", 10),
                           bg="#f4f4f9", fg="#999999", pady=10)
         footer.pack(side=tk.BOTTOM, fill=tk.X)
 
@@ -151,7 +150,7 @@ def display_main_page(root):
         button_frame.pack_forget()
 
         # Error message label
-        error_label = tk.Label(main_frame, text=error_message, font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
+        error_label = tk.Label(main_frame, text=error_message, font=("Helvetica", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
         error_label.pack(pady=20)
 
         # Back to main page button
@@ -160,24 +159,29 @@ def display_main_page(root):
 
     # Page to confirm from user that the selected video is what they want processed
     def show_confirmation_message(video_path):
-
-        # Extract filename from file path
         filename = video_path.split("/")[-1]
 
         # Replace drag-and-drop box with confirmation message
         canvas_frame.pack_forget()
         button_frame.pack_forget()
-
+        instruction_frame.pack_forget()
         # Confirmation message label
         global confirmation_label
-        confirmation_label = tk.Label(main_frame, text=f"Please confirm: Is this the video file you want to process?", font=("Segoe UI", 12, "bold"), fg="blue", bg="#f4f4f9", wraplength=600, justify="center")
+        confirmation_label = tk.Label(main_frame, text=f"Please confirm: Is this the video file you want to process?", font=("Helvetica", 12, "bold"), fg="blue", bg="#f4f4f9", wraplength=600, justify="center")
         confirmation_label.pack(pady=10)
 
         # Video filename label
         global filename_label
-        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {video_path}", font=("Segoe UI", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
+        filename_label = tk.Label(main_frame, text=f"Video File: {filename}\nLocated At Path: {video_path}\n\nOptionally, enter context for the video:", font=("Helvetica", 11), fg="#333333", bg="#f4f4f9", wraplength=600, justify="center")
         filename_label.pack(pady=5)
         
+        global text_widget
+        text_widget = tk.Text(main_frame, height=10, width=50, font=("Helvetica",11))
+        text_widget.pack(padx=10, pady=10)
+
+        # Insert default text
+        text_widget.insert("1.0", "You are a lab technician in an industrial robotics research lab working with ABB robots. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5.")
+
         # Action buttons
         global action_button_frame
         action_button_frame = tk.Frame(main_frame, bg="#f4f4f9")
@@ -187,13 +191,6 @@ def display_main_page(root):
         global back_button
         back_button = ModernRoundedButton(action_button_frame, text = "No, Back to Main Page", command=go_back_to_main_page, width=180, height=50)
         back_button.grid(row=0, column=0, padx=10)
-        
-        global text_widget
-        text_widget = tk.Text(main_frame, height=10, width=50)
-        text_widget.pack(padx=10, pady=10)
-
-        # Insert default text
-        text_widget.insert("1.0", "You are a lab technician in an industrial robotics research lab working with ABB robots. Make sure that the following key terms are spelled correctly: FlexPendant, IRB-1200, IRC-5.")
 
         global process_button
         process_button = ModernRoundedButton(action_button_frame, text="Process Video", command=lambda: process_video(video_path, text_widget.get("1.0", "end-1c")), width=180, height=50)
@@ -201,7 +198,9 @@ def display_main_page(root):
 
     # Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
     def show_success_message(output_directory):
-
+        for widget in main_frame.winfo_children():
+            if str(widget) != ".!frame.!label":
+                widget.destroy()
         # Replace confirmation message with success message
         global confirmation_label, filename_label, action_button_frame, back_button, process_button
         confirmation_label.pack_forget()
@@ -211,7 +210,7 @@ def display_main_page(root):
         process_button.pack_forget()
 
         # Success message label
-        success_label = tk.Label(main_frame, text="Video Processing Successful!", font=("Segoe UI", 12, "bold"), fg="green",
+        success_label = tk.Label(main_frame, text="Video Processing Successful!", font=("Helvetica", 12, "bold"), fg="green",
                                bg="#f4f4f9", wraplength=600, justify="center")
         success_label.pack(pady=20)
 
@@ -265,14 +264,14 @@ def display_main_page(root):
                     try:
                         image = Image.open(img_path)
 
-                        # Dynamically calculate the new height as half the vertical window size
-                        screen_height = main_frame.winfo_toplevel().winfo_height()
-                        new_height = screen_height // 2
+                        # Calculate size based on grid layout (4 columns)
+                        screen_width = main_frame.winfo_toplevel().winfo_width()
+                        target_width = (screen_width - 100) // 4  # Subtract padding and divide by 4 columns
                         aspect_ratio = image.width / image.height
-                        new_width = int(new_height * aspect_ratio)
+                        new_height = int(target_width / aspect_ratio)
 
                         # Resize the image
-                        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                        image = image.resize((target_width, new_height), Image.Resampling.LANCZOS)
                         photo = ImageTk.PhotoImage(image)
                         images.append((photo, img_path))
                     except Exception as e:
@@ -280,70 +279,84 @@ def display_main_page(root):
             return images
 
         def display_images(fps):
-            global counter
+            global counter, timestamp_arr, scrollable_frame
             counter = 0
-            global timestamp_arr
             timestamp_arr = []
-            print(timestamp_arr)
             
             # Displays the images in a grid and the alt text
             nonlocal index
-            print("INdex",index)
-            print("Alt",alt_texts)
             if index >= len(alt_texts):
                 show_success_message(html_file)
                 return
-            parse =  parse_first_time(index+1,interval_txt)
+            parse = parse_first_time(index+1,interval_txt)
             alt_label.config(text=alt_texts[index])
 
             # Clear existing buttons
             for widget in image_frame.winfo_children():
                 widget.destroy()
 
-            # Create a scrollable frame for images
-            canvas = tk.Canvas(main_frame, bg="#f4f4f9", highlightthickness=0)
-            scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            # Configure image_frame to expand
+            image_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+            # Create canvas and scrollbar
+            canvas = tk.Canvas(image_frame, bg="#f4f4f9")
+            scrollbar = tk.Scrollbar(image_frame, orient="vertical", command=canvas.yview)
             scrollable_frame = tk.Frame(canvas, bg="#f4f4f9")
 
-            # Configure the scrollable frame
+            # Configure scrolling
             scrollable_frame.bind(
                 "<Configure>",
                 lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
             )
 
-            # Add the scrollable frame to the canvas
-            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            # Make the scrollable frame expand to canvas width
+            def configure_frame(event):
+                canvas.itemconfig(frame_id, width=event.width)
+
+            # Create the window in canvas and bind configuration
+            frame_id = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.bind('<Configure>', configure_frame)
+
+            # Configure canvas scrolling
             canvas.configure(yscrollcommand=scrollbar.set)
 
-            # Pack the canvas and scrollbar
+            # Pack canvas and scrollbar to fill space
             canvas.pack(side="left", fill="both", expand=True)
             scrollbar.pack(side="right", fill="y")
 
-            # Enable scrolling with the mouse wheel
-            canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(-1 * (e.delta // 120), "units"))
+            # Configure grid columns to expand
+            scrollable_frame.grid_columnconfigure((0,1,2,3), weight=1, uniform="column")
 
             # Display images in the scrollable frame
             images = load_images(directories[index])
             row, col = 0, 0
             for photo, img_path in images:
-                button = tk.Button(scrollable_frame, image=photo, command=lambda f=img_path: select_image(f))
+                # Create a button that's exactly the size of the photo
+                button = tk.Button(scrollable_frame, image=photo, command=lambda f=img_path: select_image(f),
+                                   width=photo.width(), height=photo.height(),  # Set exact dimensions
+                                   pady=0, padx=0,  # Remove padding
+                                   bd=0,  # Remove border
+                                   highlightthickness=0)  # Remove highlight
                 button.image = photo  # Keep a reference to prevent garbage collection
-                button.grid(row=row, column=col, padx=5, pady=5)
+                button.grid(row=row * 2, column=col, padx=5, pady=5, sticky="nsew")
 
                 label = tk.Label(scrollable_frame, text=str(parse))
                 label.grid(row=row * 2 + 1, column=col, padx=5, pady=(0, 10))
 
-                parse += fps
+                parse += round(fps, 2)
+                parse = round(parse, 2)
                 col += 1
                 if col >= 4:  # 4 columns per row
                     col = 0
                     row += 1
     
         def select_image(img_path):
+            
             global state
             global counter
             global interval_txt
             global timestamp_arr
+            
             
             file_num = int(os.path.splitext(os.path.basename(img_path))[0])
             if (not state):
@@ -353,6 +366,8 @@ def display_main_page(root):
                 index += 1
                 #parse =  parse_first_time(index+1,interval_txt)
 
+                for widget in scrollable_frame.winfo_children():
+                    widget.destroy()
                 display_images(1)
             else:
                 if counter < 2:
@@ -371,16 +386,15 @@ def display_main_page(root):
                         print(f"LOG: FPS: {fps}")
                         generate_new_images(video_path,video_path[video_path.rfind("/") +1:],timestamp_arr_tuple,fps)
                         state = not state
-                        display_images(fps)
+                        display_images(round(time_difference/9,2))
 
                 else:
                     print("LOG: Nothing is being done since counter is too big")
             
-        select_image_label = tk.Label(main_frame, text="Select an image:", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        select_image_label = tk.Label(main_frame, text='Directions: \n 1. Select the image that best represents the prompt. \n 2. If none of the images seem right, click "Select Multiple Images". \n 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.', font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        select_image_label.pack(pady=10)
+        select_image_label = tk.Label(main_frame, text='Directions: \n 1. Select the image that best represents the prompt. \n 2. If none of the images seem right, click "Select Multiple Images". \n 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.\n\nPrompt:', font=("Helvetica", 12, "bold"), fg="#1d5a9a", bg="#f4f4f9", wraplength=600, justify="center")
+        select_image_label.pack(pady=3)
         alt_label = tk.Label(main_frame, text="", bg="#f4f4f9")
-        alt_label.pack(pady=10)
+        alt_label.pack(pady=0)
         
         image_frame = tk.Frame(main_frame)
         image_frame.pack()
@@ -401,7 +415,7 @@ def display_main_page(root):
     def process_video(video_path, prompt):
         # Remove the confirmation page and display the processing video label
         print("LOG: Removing Confirmation Page")
-        global confirmation_label, filename_label, action_button_frame, back_button, process_button, text_widget
+        global confirmation_label, filename_label, action_button_frame, back_button, process_button, text_widget, html_frame
         confirmation_label.pack_forget()
         filename_label.pack_forget()
         action_button_frame.pack_forget()
@@ -409,49 +423,66 @@ def display_main_page(root):
         process_button.pack_forget()
         instruction_frame.pack_forget()
         text_widget.pack_forget()
-        # Add processing video label and select image label
-        # print("LOG: Adding processing video label")
-        # process_label = tk.Label(main_frame, text="Processing Video...", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        # process_label.pack(pady=20)
+        
+        # # Clear any existing widgets in html_frame
+        # for widget in html_frame.winfo_children():
+        #     widget.destroy()
         
         html_file, output_dir, transcr, base_filename, full_input_path = generate_documentation_from_video(video_path[video_path.rfind("/") +1:], video_path, prompt)
 
-        extract_images_button = ModernRoundedButton(main_frame, text="Extract Images", command=lambda: extract_images(base_filename, full_input_path, transcr, html_file, output_dir), width=180, height=50)
-        extract_images_button.pack(pady=10)
-        back_button = ModernRoundedButton(main_frame, text="Back to prompting", command=lambda: show_confirmation_message(video_path), width=180, height=50)
-        back_button.pack(padx=10, pady=10)
+        html_frame = tk.Frame(main_frame, bg="#f4f4f9")
+        html_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Add instruction text above buttons
+        instruction_label = tk.Label(html_frame, 
+            text="Accept this HTML instruction document or go back to generate another:", 
+            font=("Helvetica", 12, "bold"), 
+            fg="#1d5a9a", 
+            bg="#f4f4f9")
+        instruction_label.pack(pady=(10,5))
+        
+        def back_to_prompt():
+            # Clear html_frame contents
+            for widget in html_frame.winfo_children():
+                widget.destroy()
+            # Unpack the frame
+            html_frame.pack_forget()
+            # Show confirmation message
+            show_confirmation_message(video_path)
+        
+        # Create a button frame to hold both buttons
+        button_frame = tk.Frame(html_frame, bg="#f4f4f9")
+        button_frame.pack(pady=10)
+        
+        # Create buttons in the button frame using grid
+        back_button = ModernRoundedButton(button_frame, text="Back to prompting", 
+            command=back_to_prompt, width=180, height=50)
+        back_button.grid(row=0, column=0, padx=10)
+        
+        extract_images_button = ModernRoundedButton(button_frame, text="Extract Images", 
+            command=lambda: extract_images(base_filename, full_input_path, transcr, html_file, output_dir), 
+            width=180, height=50)
+        extract_images_button.grid(row=0, column=1, padx=10)
 
-        html_page = HtmlFrame(main_frame)
+        # HTML frame below buttons
+        html_page = HtmlFrame(html_frame)
         html_page.pack(fill="both", expand=True)
         html_page.load_file(html_file)
-        # test_label = tk.Label(main_frame, text="TEST TEST TEST", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        # test_label.pack(pady=20)
         
         print(f"LOG: Add HTML file to page here: {html_file}")
         # Process the video and obtain image descriptions, directories, and html file
         print(f"LOG: Processing Video from GUI: {video_path}")
-        #alt_texts, output_direcs, fps_txt = extract_interval_frames(base_filename, full_input_path, transcr, html_file)
-        #abcd_label = tk.Label(main_frame, text="ABCD ABCD ABCD", font=("Segoe UI", 12, "bold"), fg="red", bg="#f4f4f9", wraplength=600, justify="center")
-        #abcd_label.pack(pady=20)
-        # global interval_txt
-        # interval_txt = fps_txt
-        # # Begin manual image selection
-        # print("LOG: Beginning manual image selection")
-        # image_selection(alt_texts, output_direcs, html_file,output_dir)
 
     def extract_images(base_filename, full_input_path, transcr, html_file, output_dir):
         for widget in main_frame.winfo_children():
-            widget.destroy()
-        extract_interval_frames
-
-
+            if str(widget) != ".!frame.!label":
+                widget.destroy()
         # Begin manual image selection
         print("LOG: Beginning manual image selection")
         alt_texts, output_direcs, fps_txt = extract_interval_frames(base_filename, full_input_path, transcr, html_file)
         global interval_txt
         interval_txt = fps_txt
         image_selection(alt_texts, output_direcs, html_file,output_dir)
-
 
     # Clear the main frame and reinitialize the main page
     def go_back_to_main_page():

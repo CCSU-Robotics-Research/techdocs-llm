@@ -6,3 +6,4 @@ tkinterdnd2
 pillow
 weasyprint
 pdf2docx
+tkinterweb

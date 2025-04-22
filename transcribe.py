@@ -143,6 +143,8 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
         if end < start:
             start, end = end, start  # Swap the times
         # Replace the tuple in the list with the corrected tuple
+        if end == start:
+            end += 1
         formatted_intervals[i] = (frame, description, start, end)
 
     # Save the captured time intervals in a .txt file as a record
