@@ -25,7 +25,7 @@ def generate_page(markdown_path):
         alt_text = match.group(1) or f"Image {image_counter} - No description provided"  # Fallback text if alt is empty
         placeholder = f'frame_{image_counter}.jpg'
         image_counter += 1
-        return f'<img src="{placeholder}" alt="{alt_text}" style="max-width: 100%; height: auto; border: 2px solid #d1d5db; border-radius: 0.5rem; margin: 1rem 0;">'
+        return f'<img src="{placeholder}" alt="{alt_text}" style="max-height: 500px; width: auto; border: 2px solid #d1d5db; border-radius: 0.5rem; margin: 1rem 0;">'
 
     # Replace image placeholders with numbered HTML img tags
     # Updated regex to better handle various markdown image formats

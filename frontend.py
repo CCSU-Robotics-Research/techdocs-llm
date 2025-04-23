@@ -210,13 +210,13 @@ def display_main_page(root):
         process_button.pack_forget()
 
         # Success message label
-        success_label = tk.Label(main_frame, text="Video Processing Successful!", font=("Helvetica", 12, "bold"), fg="green",
+        success_label = tk.Label(main_frame, text="Video Processing Successful!", font=("Helvetica", 12, "bold"), fg="#1d5a9a",
                                bg="#f4f4f9", wraplength=600, justify="center")
         success_label.pack(pady=20)
 
         # Instructions label
-        instructions_label = tk.Label(main_frame, text=f"Documentation and Keyframes Saved To:\n{output_directory}\n\nNavigate to this directory and move the newly generated .html file (and corresponding keyframe images) to an external location before processing another video. Failure to do so will cause your output files to be overwritten in subsequent video processes.",
-                                    font = ("Segoe UI", 11), fg = "#333333", bg = "#f4f4f9", wraplength = 600, justify = "center")
+        instructions_label = tk.Label(main_frame, text=f"Documentation and Keyframes Saved To:\n{output_directory}",
+                                    font = ("Helvetica", 11), fg = "#333333", bg = "#f4f4f9", wraplength = 600, justify = "center")
         instructions_label.pack(pady=5)
 
         # Back to main page button
@@ -256,27 +256,40 @@ def display_main_page(root):
         index = 0  # Current index of alt_texts and directories
         
         def load_images(directory):
-            # Loads images from a directory and returns a list of PhotoImage objects
             images = []
             for filename in os.listdir(directory):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
                     img_path = os.path.join(directory, filename)
                     try:
                         image = Image.open(img_path)
-
-                        # Calculate size based on grid layout (4 columns)
                         screen_width = main_frame.winfo_toplevel().winfo_width()
-                        target_width = (screen_width - 100) // 4  # Subtract padding and divide by 4 columns
+                        screen_height = main_frame.winfo_toplevel().winfo_height()
+                        
+                        # Calculate aspect ratio
                         aspect_ratio = image.width / image.height
-                        new_height = int(target_width / aspect_ratio)
-
+                        
+                        if aspect_ratio > 1:  # Landscape orientation
+                            print(f"LOG: Image {img_path} is landscape")
+                            print("LOG: Aspect Ratio: ", aspect_ratio)
+                            print("LOG: Image Size: ", image.size)
+                            print("LOG: Screen Size: ", screen_width, screen_height)
+                            print("LOG: Image Size: ", image.width, image.height)
+                            # Set width to half screen width minus padding
+                            target_width = (screen_width - 60) // 2  # 60 pixels for padding
+                            target_height = int(target_width / aspect_ratio)
+                            print("LOG: Target Size: ", target_width, target_height)
+                        else:  # Portrait orientation
+                            # Set height to 2/3 of screen height
+                            target_height = int(screen_height * 0.66)  # Use 66% of screen height
+                            target_width = int(target_height * aspect_ratio)
+                        
                         # Resize the image
-                        image = image.resize((target_width, new_height), Image.Resampling.LANCZOS)
+                        image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
                         photo = ImageTk.PhotoImage(image)
                         images.append((photo, img_path))
                     except Exception as e:
                         print(f"ERROR: Error loading image: {img_path}, {e}")
-            return images
+            return images, aspect_ratio > 1  # Return whether images are landscape
 
         def display_images(fps):
             global counter, timestamp_arr, scrollable_frame
@@ -289,14 +302,14 @@ def display_main_page(root):
                 show_success_message(html_file)
                 return
             parse = parse_first_time(index+1,interval_txt)
-            alt_label.config(text=alt_texts[index])
+            alt_label.config(text=f"Prompt: {alt_texts[index]}")
 
             # Clear existing buttons
             for widget in image_frame.winfo_children():
                 widget.destroy()
 
             # Configure image_frame to expand
-            image_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+            image_frame.pack(fill=tk.BOTH, expand=True)
 
             # Create canvas and scrollbar
             canvas = tk.Canvas(image_frame, bg="#f4f4f9")
@@ -325,28 +338,42 @@ def display_main_page(root):
             scrollbar.pack(side="right", fill="y")
 
             # Configure grid columns to expand
-            scrollable_frame.grid_columnconfigure((0,1,2,3), weight=1, uniform="column")
-
-            # Display images in the scrollable frame
-            images = load_images(directories[index])
+            images, is_landscape = load_images(directories[index])
             row, col = 0, 0
-            for photo, img_path in images:
-                # Create a button that's exactly the size of the photo
-                button = tk.Button(scrollable_frame, image=photo, command=lambda f=img_path: select_image(f),
-                                   width=photo.width(), height=photo.height(),  # Set exact dimensions
-                                   pady=0, padx=0,  # Remove padding
-                                   bd=0,  # Remove border
-                                   highlightthickness=0)  # Remove highlight
-                button.image = photo  # Keep a reference to prevent garbage collection
-                button.grid(row=row * 2, column=col, padx=5, pady=5, sticky="nsew")
+            # For landscape images, force 2 columns
+            max_cols = 2 if is_landscape else max(2, (main_frame.winfo_width() - 40) // (images[0][0].width() + 10))
 
+            # Configure grid columns to be equal width
+            for i in range(max_cols):
+                scrollable_frame.grid_columnconfigure(i, weight=1)
+
+            for photo, img_path in images:
+                print(f"LOG: Image {img_path} is being displayed")
+                print("LOG: Image Size: ", photo.width(), photo.height())
+                
+                # Create frame to hold button
+                frame = tk.Frame(scrollable_frame, bg="#f4f4f9")
+                frame.grid(row=row * 2, column=col, padx=5, pady=5, sticky="nsew")
+                frame.grid_propagate(False)  # Prevent frame from shrinking
+                frame.configure(width=photo.width(), height=photo.height())
+                
+                # Create button within frame
+                button = tk.Button(frame, image=photo, 
+                                  command=lambda f=img_path: select_image(f),
+                                  pady=0, padx=0,
+                                  bd=0,
+                                  highlightthickness=0)
+                button.image = photo  # Keep reference
+                button.place(relx=0.5, rely=0.5, anchor="center")  # Center in frame
+
+                # Add timestamp label
                 label = tk.Label(scrollable_frame, text=str(parse))
                 label.grid(row=row * 2 + 1, column=col, padx=5, pady=(0, 10))
 
                 parse += round(fps, 2)
                 parse = round(parse, 2)
                 col += 1
-                if col >= 4:  # 4 columns per row
+                if col >= max_cols:
                     col = 0
                     row += 1
     
@@ -391,16 +418,16 @@ def display_main_page(root):
                 else:
                     print("LOG: Nothing is being done since counter is too big")
             
-        select_image_label = tk.Label(main_frame, text='Directions: \n 1. Select the image that best represents the prompt. \n 2. If none of the images seem right, click "Select Multiple Images". \n 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.\n\nPrompt:', font=("Helvetica", 12, "bold"), fg="#1d5a9a", bg="#f4f4f9", wraplength=600, justify="center")
-        select_image_label.pack(pady=3)
+        select_image_label = tk.Label(main_frame, text='1. Select the image that best represents the prompt. 2. If no images match, click "Select Multiple Images". 3. Then, choose two images—you will be shown nine new images generated from the frames between the two you selected.', font=("Helvetica", 12, "bold"), fg="#1d5a9a", bg="#f4f4f9", wraplength=1200, justify="center")
+        select_image_label.pack(pady=5)
         alt_label = tk.Label(main_frame, text="", bg="#f4f4f9")
-        alt_label.pack(pady=0)
+        alt_label.pack()
         
         image_frame = tk.Frame(main_frame)
         image_frame.pack()
         
         select_interval_button = ModernRoundedButton(main_frame, command=lambda: changeState(),text="Select Multiple Images", width=180, height=50)
-        select_interval_button.pack(pady=10)
+        select_interval_button.pack(pady=3)
         
         
         display_images(1)
@@ -488,7 +515,8 @@ def display_main_page(root):
     def go_back_to_main_page():
         print("LOG: Reverting to main page")
         for widget in main_frame.winfo_children():
-            widget.destroy()
+            if str(widget) != ".!frame.!label":
+                widget.destroy()
         initialize_main_page()
 
     initialize_main_page() # Create a main page to be displayed to the user
