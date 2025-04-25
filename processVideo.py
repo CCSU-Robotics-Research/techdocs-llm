@@ -9,7 +9,7 @@ def transcode_audio(input_video_path, output_directory, base_filename):
     (
         ffmpeg
         .input(input_video_path)
-        .output(audio_output_path, ar=44100, ac=2, ab="192k")
+        .output(audio_output_path, ar=44100, ac=2, ab="192k",threads=6)
         .run()
     )
     return audio_output_path
