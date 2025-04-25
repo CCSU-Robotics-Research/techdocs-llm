@@ -9,7 +9,7 @@ def transcode_audio(input_video_path, output_directory, base_filename):
     (
         ffmpeg
         .input(input_video_path)
-        .output(audio_output_path, ar=44100, ac=2, ab="192k",threads=6)
+        .output(audio_output_path, ar=44100, ac=2, ab="192k",threads=2)
         .run()
     )
     return audio_output_path
@@ -27,7 +27,7 @@ def interval_frame_extraction(input_video_path, output_directory, base_filename,
             ffmpeg
             .input(input_video_path, ss=start, to=end)
             .filter("fps", fps=time_interval) # Extract frames at 1 FPS
-            .output(os.path.join(jpg_output_directory, "%d.jpg"), q=2) # Highest image quality
+            .output(os.path.join(jpg_output_directory, "%d.jpg"), q=2,threads=2) # Highest image quality
             .run()
         )
         jpg_directories.append(jpg_output_directory)

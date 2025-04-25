@@ -2,7 +2,8 @@
 
 from openai import OpenAI
 from pydub import AudioSegment
-import json
+import threading
+from queue import Queue
 
 client = OpenAI() # Instance to access OpenAI API
 
@@ -121,31 +122,77 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
     # Process the response into an array of tuples to prepare for image extraction
     data = response.choices[0].message.content.split("\n")
     formatted_intervals = [] # Array to store the formatted tuples
+    result_queue = Queue()
+    threads = []
 
+    def process_entry(entry, result_queue):
+        try:
+            # Split the entry by ' | ' to separate the time interval and description
+            info = entry.split(" | ")
+
+            # Extract frame name from '[frame_1]'
+            frame_name = info[0].split("]")[0][1:]
+
+            # Extract start and end times from interval range
+            time_range = info[0].split(" ")[1]
+            start_time, end_time = map(float, time_range.split("-"))
+
+            # Create the tuple and add to queue
+            formatted_tuple = (frame_name, info[1].strip('"'), start_time, end_time)
+            result_queue.put(formatted_tuple)
+        except Exception as e:
+            print(f"ERROR: Failed to process entry: {entry}, {e}")
+
+    # Replace the existing for loop with this threaded version
+
+    # Create and start threads for each entry
     for entry in data:
-        # Split the entry by ' | ' to separate the time interval and description
-        info = entry.split(" | ")
+        thread = threading.Thread(target=process_entry, args=(entry, result_queue))
+        threads.append(thread)
+        thread.start()
 
-        # Extract frame name from '[frame_1]'
-        frame_name = info[0].split("]")[0][1:]
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
 
-        # Extract start and end times from interval range
-        time_range = info[0].split(" ")[1]
-        start_time, end_time = map(float, time_range.split("-"))
+    # Collect results from queue
+    while not result_queue.empty():
+        formatted_intervals.append(result_queue.get())
 
-        # Create the tuple
-        formatted_tuple = (frame_name, info[1].strip('"'), start_time, end_time)
-        formatted_intervals.append(formatted_tuple)
+    # Sort intervals by frame number to maintain order
+    formatted_intervals.sort(key=lambda x: int(x[0].replace('frame_', '')))
 
-    # Validate each interval, end should be greater than start (THIS WILL BE DELETED):
-    for i, (frame, description, start, end) in enumerate(formatted_intervals):
+    def validate_interval(interval, result_queue):
+        frame, description, start, end = interval
         # Swap start and end if end is less than start
         if end < start:
-            start, end = end, start  # Swap the times
-        # Replace the tuple in the list with the corrected tuple
+            start, end = end, start
+        # Add 1 second if start equals end
         if end == start:
             end += 1
-        formatted_intervals[i] = (frame, description, start, end)
+        result_queue.put((frame, description, start, end))
+
+    # Replace the validation loop with threaded version
+    validation_queue = Queue()
+    validation_threads = []
+
+    # Create and start threads for each interval
+    for interval in formatted_intervals:
+        thread = threading.Thread(target=validate_interval, args=(interval, validation_queue))
+        validation_threads.append(thread)
+        thread.start()
+
+    # Wait for all validation threads to complete
+    for thread in validation_threads:
+        thread.join()
+
+    # Clear the formatted_intervals list and refill with validated results
+    formatted_intervals.clear()
+    while not validation_queue.empty():
+        formatted_intervals.append(validation_queue.get())
+
+    # Sort intervals by frame number to maintain order
+    formatted_intervals.sort(key=lambda x: int(x[0].replace('frame_', '')))
 
     # Save the captured time intervals in a .txt file as a record
     output_file_path = output_directory + "/" + base_filename + "_keyframe_time_intervals.txt"

@@ -249,50 +249,52 @@ def display_main_page(root):
     
     # Creates the image selection interface
     def image_selection(alt_texts, directories, html_file, output_dir):
-        global state
+        global state, last_fps
+        last_fps = 1
         state = False
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         index = 0  # Current index of alt_texts and directories
         
         def load_images(directory):
+            global scrollable_frame
             images = []
-            for filename in os.listdir(directory):
-                if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    img_path = os.path.join(directory, filename)
-                    try:
-                        image = Image.open(img_path)
-                        screen_width = main_frame.winfo_toplevel().winfo_width()
-                        screen_height = main_frame.winfo_toplevel().winfo_height()
-                        
-                        # Calculate aspect ratio
-                        aspect_ratio = image.width / image.height
-                        
-                        if aspect_ratio > 1:  # Landscape orientation
-                            print(f"LOG: Image {img_path} is landscape")
-                            print("LOG: Aspect Ratio: ", aspect_ratio)
-                            print("LOG: Image Size: ", image.size)
-                            print("LOG: Screen Size: ", screen_width, screen_height)
-                            print("LOG: Image Size: ", image.width, image.height)
-                            # Set width to half screen width minus padding
-                            target_width = (screen_width - 60) // 2  # 60 pixels for padding
-                            target_height = int(target_width / aspect_ratio)
-                            print("LOG: Target Size: ", target_width, target_height)
-                        else:  # Portrait orientation
-                            # Set height to 2/3 of screen height
-                            target_height = int(screen_height * 0.66)  # Use 66% of screen height
-                            target_width = int(target_height * aspect_ratio)
-                        
-                        # Resize the image
-                        image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
-                        photo = ImageTk.PhotoImage(image)
-                        images.append((photo, img_path))
-                    except Exception as e:
-                        print(f"ERROR: Error loading image: {img_path}, {e}")
+            
+            # Get all image files and sort them numerically
+            filenames = [f for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
+            sorted_filenames = sorted(filenames, key=lambda x: int(os.path.splitext(x)[0]))
+            print("LOG: Sorted filenames: ", sorted_filenames)
+            
+            for filename in sorted_filenames:
+                img_path = os.path.join(directory, filename)
+                try:
+                    image = Image.open(img_path)
+                    screen_width = main_frame.winfo_toplevel().winfo_width()
+                    screen_height = main_frame.winfo_toplevel().winfo_height()
+                    
+                    # Calculate aspect ratio
+                    aspect_ratio = image.width / image.height
+                    
+                    if aspect_ratio > 1:  # Landscape orientation
+                        # Set width to half screen width minus padding
+                        target_width = (screen_width - 60) // 2  # 60 pixels for padding
+                        target_height = int(target_width / aspect_ratio)
+                    else:  # Portrait orientation
+                        # Set height to 2/3 of screen height
+                        target_height = int(screen_height * 0.66)  # Use 66% of screen height
+                        target_width = int(target_height * aspect_ratio)
+                    
+                    # Resize the image
+                    image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(image)
+                    images.append((photo, img_path))
+                except Exception as e:
+                    print(f"ERROR: Error loading image: {img_path}, {e}")
+            print("Images array: ", images)
             return images, aspect_ratio > 1  # Return whether images are landscape
 
         def display_images(fps):
-            global counter, timestamp_arr, scrollable_frame
+            global counter, timestamp_arr, scrollable_frame, last_fps
             counter = 0
             timestamp_arr = []
             
@@ -383,9 +385,10 @@ def display_main_page(root):
             global counter
             global interval_txt
             global timestamp_arr
-            
+            global last_fps
             
             file_num = int(os.path.splitext(os.path.basename(img_path))[0])
+            print("LOG: File Number: ", file_num)
             if (not state):
                 # Copies the selected image to the output directory and moves to the next set
                 nonlocal index
@@ -399,20 +402,49 @@ def display_main_page(root):
             else:
                 if counter < 2:
                     parse =  parse_first_time(index+1,interval_txt)
-                    timestamp_arr.append(parse+(file_num-1))
+                    print("First time parse: ", parse)
+                    print("LOG: file_num: ", file_num)
+                    print("last_fps: ", last_fps)
+                    timestamp_arr.append(parse+(file_num-1)/last_fps)
                     counter += 1
 
                     if counter == 2:
                         fps = 1
                         sorted_times = sorted(timestamp_arr)
+                        print("timestamp_arr: ", timestamp_arr)
                         timestamp_arr_tuple = [(f"frame_{index+1}", "", *sorted_times)]
                         time_difference = sorted_times[1] - sorted_times[0]
                         
                         # Calculate frames per second to get 9 images in the interval
                         fps = 9 / time_difference if time_difference != 0 else float('inf')
                         print(f"LOG: FPS: {fps}")
-                        generate_new_images(video_path,video_path[video_path.rfind("/") +1:],timestamp_arr_tuple,fps)
+                        last_fps = fps
+                        # Update timestamps in interval file
+                        with open(interval_txt, 'r') as file:
+                            lines = file.readlines()
+
+                        # Find and update the target line
+                        target_frame = f"[frame_{index+1}]"
+                        for i, line in enumerate(lines):
+                            if line.startswith(target_frame):
+                                # Split line into parts
+                                frame_part = line[:line.index(']') + 1]  # Get [frame_X] part
+                                description_part = line[line.index('|'):]  # Get | "description" part
+                                
+                                # Create new line with updated timestamps
+                                new_line = f"{frame_part} {sorted_times[0]:.2f}-{sorted_times[1]:.2f}{description_part}"
+                                lines[i] = new_line
+                                break
+
+                        # Write updated content back to file
+                        with open(interval_txt, 'w') as file:
+                            file.writelines(lines)
+
+                        generate_new_images(video_path, video_path[video_path.rfind("/") +1:], timestamp_arr_tuple, fps)
                         state = not state
+                        
+
+
                         display_images(round(time_difference/9,2))
 
                 else:

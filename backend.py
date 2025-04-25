@@ -68,7 +68,6 @@ def extract_interval_frames(base_filename, full_input_path, transcription, html_
 
     # Return the image descriptions, file paths to the image directories, and the HTML file to the frontend
     return alt_texts, interval_output_directories, interval_time_txt
-    #output_direcs,
 
 def generate_new_images(input_video_path,input_video_name,keyframe_time_intervals, time_interval):
     base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
