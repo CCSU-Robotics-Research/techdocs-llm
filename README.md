@@ -40,16 +40,16 @@ To install all the below requirements, use `pip install -r requirements.txt`, or
 ## Setup:
 
 The OpenAI API key needs to be saved as an environment variable on your machine. On Linux/MacOS use:
-export OPENAI_API_KEY='your_api_key_here'
+`export OPENAI_API_KEY='your_api_key_here'`
 
 then restart terminal and confirm it was set with:
-echo $OPENAI_API_KEY
+`echo $OPENAI_API_KEY`
 
 On Windows use:
-set OPENAI_API_KEY=your_api_key_here
+`set OPENAI_API_KEY=your_api_key_here`
 
 then restart terminal and confirm it was set with:
-echo %OPENAI_API_KEY%
+`echo %OPENAI_API_KEY%`
 
 If that doesn't work, then create a file named ".env" in the root folder of the cloned GitHub repository (it should be a hidden file). In the file, write the text `OPENAI_API_KEY=<your-api-key-here>`.  <br />
 
