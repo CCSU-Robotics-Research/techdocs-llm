@@ -1,23 +1,26 @@
 # LLM in Workforce: Knowledge Capture and Transfer
 
-Video → Tech Docs utilizing various AI models for text &amp; photo/video
+Video → Tech Docs utilizing AI for technical documentation creation and human input to insert images.
 
-The Video to Technical Documentation Generator is a desktop application that automatically converts instructional videos into detailed technical documentation. It uses AI to transcribe audio, analyze video content, and generate structured documentation with relevant screenshots.
+The Video to Technical Documentation Generator is a desktop application that converts instructional videos into detailed technical documentation and allows the user to insert images. It uses AI to transcribe audio, analyze video content, generate structured documentation, and creates placeholders for images that th euser will select.
 
 ## Usage:
 
 This system accepts only .mov, .mp4, .avi, and .mkv files. All other file types are rejected.
 
-Drag and drop a valid video file or choose a video file to upload using the system file explorer. Confirm the video you want to process is correct, then the system will process the video into work instructions with keyframes. All output is saved in the /output directory in the project repository.
+Drag and drop a valid video file or choose a video file to upload using the system file explorer. Confirm the video you want to process is correct and, optionally, provide context regarding the content of the video. Then, the system will process the video into work instructions with image placeholders. The system will show the user a description of an ideal image and multiple images for each placeholder. All output is saved in the directory of the user's choosing.
 
-After processing a video, make sure to move the generated documentation files and keyframes to another location on your local machine. Failure to do so will cause the output to be overwritten in subsequent video processing requests.
+Subsequent runs of the video should be saved in a new file location as the system will overwrite the files of the directory.
 
-**Note:** Please be mindful that processing a video can be somewhat expensive. Running a 12-minute robotics lab video costed about 3-4 USD. Please plan your tests accordingly.
+**Note:** Processing a 10 minute video costs about $0.30 and around 5 minutes.
 
 ## System/OS Package Requirements:
+Windows 11, macOS or Linux are required for this system to operate.
+
+
 You must have these packages installed to your local machine prior to installing any Python packages.
 
-- **Python**: Install the latest version of Python from https://python.org. Verify Python is installed with `python --version`.
+- **Python**: Install the latest version of Python from https://python.org. Verify Python is installed with `python --version`. Python version 3.11 or newer is required. 
 - **FFmpeg**: Install the latest version from https://ffmpeg.org, or use the Homebrew package manager. Verify FFmpeg is installed on your system with `ffmpeg -version`.
 - **tkinter:** Tkinter should already be included as a part of Python. However, to install tkinter, use `sudo apt-get install python3-tk`. If that doesn't work, try `pip install tk`. To verify installation of tkinter, run `python -m tkinter` in the Terminal. If you see a GUI window popup, then Tkinter is installed on your system. _(NOTE: Despite successful installation, you may see a warning in PyCharm saying "Package requirement 'tkinter' is not satisfied" — if the program still runs and displays a GUI window, you can safely ignore this warning.)_
 
@@ -29,16 +32,24 @@ To install all the below requirements, use `pip install -r requirements.txt`, or
 - **pydub:** Used for audio processing, often requiring FFmpeg. Verify FFmpeg is installed, see above.
 - **markdown:** Used for markdown file processing for page generation.
 - **tkinterdnd2:** This is a drag-and-drop library for Tkinter.
+- **pillow:** This assists in displaying images on the frontend.
+- **weasyprint:** Used to convert HTML to PDF.
+- **pdf2docx:** Used to convert PDF to DOCX.
+- **tkinterweb:** Used to display the HTML.
 
 ## Setup:
 
-1. Clone this git repository to your local machine and set it up in the PyCharm IDE.
-2. Install Python and FFmpeg with the links above. Verify these have installed.
-3. Ensure tkinter is installed on your system; if not then install it.
-4. Run `pip install -r requirements.txt` to install all Python package dependencies.
-5. Run `python main.py` to execute the program, or click the Play button in PyCharm with the run configuration set to main.py. The main page of the GUI should launch.
+The OpenAI API key needs to be saved as an environment variable on your machine. On Linux/MacOS use:
+export OPENAI_API_KEY='your_api_key_here'
 
-The OpenAI API key needs to be saved as an env variable on your machine. You can export an environment variable from the Terminal with the name `OPENAI_API_KEY`.
+then restart terminal and confirm it was set with:
+echo $OPENAI_API_KEY
+
+On Windows use:
+set OPENAI_API_KEY=your_api_key_here
+
+then restart terminal and confirm it was set with:
+echo %OPENAI_API_KEY%
 
 If that doesn't work, then create a file named ".env" in the root folder of the cloned GitHub repository (it should be a hidden file). In the file, write the text `OPENAI_API_KEY=<your-api-key-here>`.  <br />
 
@@ -52,11 +63,14 @@ Then navigate to `transcribe.py` and replace the `client = OpenAI()` code statem
 
 If you use this code snippet for a custom .env file in your repo, make sure to exclude these changes when making commits. <br />
 
-## Source Control Techniques:
 
-It is strongly recommended to use the PyCharm GitHub integration or GitHub Desktop. Only as a last resort (if neither approach of version control works), carefully use git commands in the Terminal. You may need to authenticate with a Personal Access Token (PAT) from your GitHub account prior to pulling or pushing any code with `git`. For details see https://github.com.
 
-To install git on your system, run `brew install git`.
+1. Clone this git repository to your local machine.
+2. Install Python and FFmpeg with the links above.
+3. Ensure tkinter is installed on your system; if not then install it.
+4. Run `pip install -r requirements.txt` to install all Python package dependencies.
+5. Run `python main.py` to execute the program, or click the Play button in PyCharm or with the Python extension in VS Code with the run configuration set to main.py. The main page of the GUI should launch.
+
 
 ## Developer Table of Contents:
 
@@ -83,7 +97,15 @@ Contains all the functions that handle the GUI, using the Tkinter library.
   - `show_error_message()`: Error message page with a custom error message
   - `show_confirmation_message():` Page to confirm from user that the selected video is what they want processed (given a video file path)
   - `show_success_message()`: Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
+-’parse_first_time()’: Gets the start time from each interval in the generated text file
+-’image_selection()’: Starts the process of being able to select images
+-’load_images()’:  Loads the images and corrects their size
+-’display_images()’: Displays images and the alt text to the front end
+-’configure_frame()’: Creates a scrollable frame
+-’select_image()’: Selected images get stored in the correct folder
+-’change_State()’: State of state variable is changed
   - `process_video()`: Communicate with backend.py to initiate video processing for a given video file
+-’extract_images()’: Asks back end to start pulling images
   - `go_back_to_main_page()`: Clear the main frame and reinitialize the main page
 - `start_frontend()`: Driver for GUI initialization, to be invoked in main.py
 
@@ -91,6 +113,9 @@ Contains all the functions that handle the GUI, using the Tkinter library.
 The driver of the video processing (occurring in the background after a video is uploaded) which also depends on other files for assistance.
 
 - `generate_documentation_from_video()`: Given an input video from the GUI (its file path and file name), process it into work instructions.
+-’extract_interval_frames()’: Send HTML file and the transcription to AI to find correct time intervals
+-’generate_new_images()’: Generates new images if two images are selected
+-’convert_html()’: Converts the html to docx and pdf
 
 ### `processVideo.py`
 Contains code for transcoding a video into audio and extracting intervals of images from a video with FFmpeg.
@@ -104,26 +129,11 @@ Contains functions to generate a segmented transcription from an audio file and 
 
 - `transcribe()`: Transcribes an audio file into a transcription with timestamps and generates a markdown file
 - `obtain_time_intervals()`: Fetches the correct time intervals for image extraction using the generated HTML file with img placeholders and the transcription with timestamps.
+-’process_entry()’: Formatting for time interval
+-’validate_interval():’ Makes sure the interval is valid (example of invalid is 1:00-1:00)
 
 ### `generatePage.py`
 Contains functions to generate an HTML page of work instructions from a processed video.
 
-- `generate_page()`: Using a markdown file, generate an HTMl page as output
-
-### `imageAnalysis.py`
-Contains functions for the final keyframe selection process from a set of intervals of images. Image analysis uses OpenAI API.
-
-- `encode_image()`: Encodes an image into a base64 string
-- `image_analysis()`: Analyses intervals of images, comparing them against their corresponding alt text placeholders, and selects the best keyframes from each interval
-
-## Proof of Concept for User Input Keyframe Extraction:
-
-Aside from the main branch on GitHub, there is a user-input-proof-of-concept branch. This branch contains some Tkinter GUI code for a prototype of what user-input keyframe extraction would look like. <br />
-
-This system would run the exact same as the automated keyframe extraction (with time intervals being fetched and intervals of images being analyzed). However, rather than having OpenAI API analyze each set of images, the user would manually choose which one they think is best given the image placeholder (specified in the GUI). The idea is to save money on API calls and have a user eliminate any possible mistakes that OpenAI API may make.
-
-This branch contains hard-coded samples of what the frontend would look like, and is detached from the backend. However, **building upon this branch is NOT recommended** since this branch is numerous commits behind the main branch (which contains the up-to-date working system).
-
-Our suggestion is to use the code in this branch as a reference to build upon a feature branch that is created from main. Once sufficient progress has been made in a feature branch with the user-input keyframe extraction, upon client approval, the proof of concept branch can be safely deleted.
-
-**Note:** This is completely independent from the user story about a local machine-learning library based keyframe extraction, which is another method suggested by the client to move the system away from relying on API calls.
+- `generate_page()`: Using a markdown file, generate an HTML page as output
+- `numbered_replacement()`: Adjusts markdown image placeholders to HTML images tags
