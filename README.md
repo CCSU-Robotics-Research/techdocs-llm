@@ -97,15 +97,15 @@ Contains all the functions that handle the GUI, using the Tkinter library.
   - `show_error_message()`: Error message page with a custom error message
   - `show_confirmation_message():` Page to confirm from user that the selected video is what they want processed (given a video file path)
   - `show_success_message()`: Page to show success message with instructions to save outputted files (at the specified output directory) and a button to go back to the main page
-  - ’parse_first_time()’: Gets the start time from each interval in the generated text file
-  - ’image_selection()’: Starts the process of being able to select images
-  - ’load_images()’:  Loads the images and corrects their size
-  - ’display_images()’: Displays images and the alt text to the front end
-  - ’configure_frame()’: Creates a scrollable frame
-  - ’select_image()’: Selected images get stored in the correct folder
-  - ’change_State()’: State of state variable is changed
+  - `parse_first_time()`: Gets the start time from each interval in the generated text file
+  - `image_selection()`: Starts the process of being able to select images
+  - `load_images()`:  Loads the images and corrects their size
+  - `display_images()`: Displays images and the alt text to the front end
+  - `configure_frame()`: Creates a scrollable frame
+  - `select_image()`: Selected images get stored in the correct folder
+  - `change_State()`: State of state variable is changed
   - `process_video()`: Communicate with backend.py to initiate video processing for a given video file
-  - ’extract_images()’: Asks back end to start pulling images
+  - `extract_images()`: Asks back end to start pulling images
   - `go_back_to_main_page()`: Clear the main frame and reinitialize the main page
   - `start_frontend()`: Driver for GUI initialization, to be invoked in main.py
 
@@ -113,9 +113,9 @@ Contains all the functions that handle the GUI, using the Tkinter library.
 The driver of the video processing (occurring in the background after a video is uploaded) which also depends on other files for assistance.
 
 - `generate_documentation_from_video()`: Given an input video from the GUI (its file path and file name), process it into work instructions.
-- ’extract_interval_frames()’: Send HTML file and the transcription to AI to find correct time intervals
-- ’generate_new_images()’: Generates new images if two images are selected
-- ’convert_html()’: Converts the HTML to DOCX and PDF
+- `extract_interval_frames()`: Send HTML file and the transcription to AI to find correct time intervals
+- `generate_new_images()`: Generates new images if two images are selected
+- `convert_html()`: Converts the HTML to DOCX and PDF
 
 ### `processVideo.py`
 Contains code for transcoding a video into audio and extracting intervals of images from a video with FFmpeg.
@@ -129,8 +129,8 @@ Contains functions to generate a segmented transcription from an audio file and 
 
 - `transcribe()`: Transcribes an audio file into a transcription with timestamps and generates a markdown file
 - `obtain_time_intervals()`: Fetches the correct time intervals for image extraction using the generated HTML file with img placeholders and the transcription with timestamps.
-- ’process_entry()’: Formatting for time intervals
-- ’validate_interval():’ Makes sure the interval is valid (example of invalid is 1:00-1:00)
+- `process_entry()`: Formatting for time intervals
+- `validate_interval():` Makes sure the interval is valid (example of invalid is 1:00-1:00)
 
 ### `generatePage.py`
 Contains functions to generate an HTML page of work instructions from a processed video.
