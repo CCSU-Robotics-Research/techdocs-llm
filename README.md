@@ -15,7 +15,14 @@ Subsequent runs of the video should be saved in a new file location as the syste
 **Note:** Processing a 10 minute video costs about $0.30 and around 5 minutes.
 
 ## System/OS Package Requirements:
-Windows 11, macOS or Linux are required for this system to operate.
+Windows 10/11, macOS or Linux are required for this system to operate.
+
+If you are on windows you must follow these steps:
+
+- Download the MSYS2 installer [from msys2.org](https://www.msys2.org/). Get the msys2-x86_64-*.exe installer for 64-bit systems 
+- Run the installer
+- Once you reach the terminal run this command: pacman -S mingw-w64-x86_64-pango
+- For more information visit https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
 
 
 You must have these packages installed to your local machine prior to installing any Python packages.
