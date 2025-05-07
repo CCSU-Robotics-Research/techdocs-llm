@@ -547,8 +547,7 @@ def display_main_page(root):
     def go_back_to_main_page():
         print("LOG: Reverting to main page")
         for widget in main_frame.winfo_children():
-            if str(widget) != ".!frame.!label":
-                widget.destroy()
+            widget.destroy()
         initialize_main_page()
 
     initialize_main_page() # Create a main page to be displayed to the user
