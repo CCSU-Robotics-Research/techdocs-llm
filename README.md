@@ -14,7 +14,12 @@ Subsequent runs of the video should be saved in a new file location as the syste
 
 **Note:** Processing a 10 minute video costs about $0.30 and around 5 minutes.
 
+# Follow the steps below in order:
+
 ## System/OS Package Requirements:
+
+Clone this git repository to your local machine.
+
 Windows 10/11, macOS or Linux are required for this system to operate.
 
 If you are on windows you must follow these steps:
@@ -24,12 +29,13 @@ If you are on windows you must follow these steps:
 - Once you reach the terminal run this command: pacman -S mingw-w64-x86_64-pango
 - For more information visit https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
 
+You must have the following packages installed to your local machine prior to installing any Python packages.
 
-You must have these packages installed to your local machine prior to installing any Python packages.
-
-- **Python**: Install the latest version of Python from https://python.org. Verify Python is installed with `python --version`. Python version 3.11 or newer is required. 
-- **FFmpeg**: Install the latest version from https://ffmpeg.org, or use the Homebrew package manager. Verify FFmpeg is installed on your system with `ffmpeg -version`.
+- **Python**: Install the latest version of Python from https://python.org. When first running the installer, ensure 'Add Python to Path' is checked off. After installing Python, close and reopen your terminal and/or IDE. Verify Python is installed with `python --version`. Python version 3.11 or newer is required. 
+- **FFmpeg**: Install the latest version of [FFmpeg](https://ffmpeg.org) using `winget install ffmpeg` on Windows, `brew install ffmpeg` on Mac, and on `sudo apt install ffmpeg` Linux. After installing FFmpeg, close and reopen your terminal and/or IDE. Verify FFmpeg is installed on your system with `ffmpeg -version`. Do not run pip install ffmpeg, that is not the correct package.
 - **tkinter:** Tkinter should already be included as a part of Python. However, to install tkinter, use `sudo apt-get install python3-tk`. If that doesn't work, try `pip install tk`. To verify installation of tkinter, run `python -m tkinter` in the Terminal. If you see a GUI window popup, then Tkinter is installed on your system. _(NOTE: Despite successful installation, you may see a warning in PyCharm saying "Package requirement 'tkinter' is not satisfied" — if the program still runs and displays a GUI window, you can safely ignore this warning.)_
+
+If using PyCharm, after installing Python, FFmpeg, and restarting PyCharm, it should prompt you to create a virtual environment. Accept and create the virtual environment with the requirements installed. You will not need to follow the 'Python Package Requirements' steps below.
 
 ## Python Package Requirements:
 To install all the below requirements, use `pip install -r requirements.txt`, or use `pip install <package-name>` and install each package separately.
@@ -43,6 +49,7 @@ To install all the below requirements, use `pip install -r requirements.txt`, or
 - **weasyprint:** Used to convert HTML to PDF.
 - **pdf2docx:** Used to convert PDF to DOCX.
 - **tkinterweb:** Used to display the HTML.
+- **audioop-lts:** Used for audio handling.
 
 ## Setup:
 
@@ -52,7 +59,15 @@ The OpenAI API key needs to be saved as an environment variable on your machine.
 then restart terminal and confirm it was set with:
 `echo $OPENAI_API_KEY`
 
-On Windows use:
+On Windows search 'Edit the system environment variables' amd open the Control Panel search result. At the top click 'Advanced', then 'Environment Variables'. Then at the bottom under 'System Variables' click 'New'. Enter 'OPENAI_API_KEY' as the 'Variable Name' and the API Key as the 'Variable Value'. Hit 'Ok' three times to confirm. Restart PyCharm.
+
+On Windows Powershell use:
+`$env:OPENAI_API_KEY ="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"`
+
+then confirm it was set with:
+`echo $env:OPENAI_API_KEY`
+
+On Windows Terminal use:
 `set OPENAI_API_KEY=your_api_key_here`
 
 then restart terminal and confirm it was set with:
@@ -70,14 +85,7 @@ Then navigate to `transcribe.py` and replace the `client = OpenAI()` code statem
 
 If you use this code snippet for a custom .env file in your repo, make sure to exclude these changes when making commits. <br />
 
-
-
-1. Clone this git repository to your local machine.
-2. Install Python and FFmpeg with the links above.
-3. Ensure tkinter is installed on your system; if not then install it.
-4. Run `pip install -r requirements.txt` to install all Python package dependencies.
-5. Run `python main.py` to execute the program, or click the Play button in PyCharm or with the Python extension in VS Code with the run configuration set to main.py. The main page of the GUI should launch.
-
+## You can then run the main.py file
 
 ## Developer Table of Contents:
 
