@@ -62,7 +62,7 @@ then restart terminal and confirm it was set with:
 On Windows search 'Edit the system environment variables' amd open the Control Panel search result. At the top click 'Advanced', then 'Environment Variables'. Then at the bottom under 'System Variables' click 'New'. Enter 'OPENAI_API_KEY' as the 'Variable Name' and the API Key as the 'Variable Value'. Hit 'Ok' three times to confirm. Restart PyCharm.
 
 On Windows Powershell use:
-`$env:OPENAI_API_KEY ="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"`
+`$env:OPENAI_API_KEY ="API_KEY_HERE"`
 
 then confirm it was set with:
 `echo $env:OPENAI_API_KEY`
