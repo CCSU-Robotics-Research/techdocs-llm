@@ -7,3 +7,4 @@ pillow
 weasyprint
 pdf2docx
 tkinterweb
+audioop-lts
