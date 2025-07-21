@@ -171,5 +171,9 @@ cython_debug/
 .DS_Store
 
 /temp
-/input
-/output
+/__pycache__
+/venv
+/.idea
+
+*.pyc
+
