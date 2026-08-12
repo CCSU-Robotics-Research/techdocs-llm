@@ -5,7 +5,10 @@ from pydub import AudioSegment
 import threading
 from queue import Queue
 
-client = OpenAI() # Instance to access OpenAI API
+client = OpenAI(
+    api_key="API_KEY_HERE",
+    organization="ORG_ID_HERE"
+) # Instance to access OpenAI API
 
 # Transcribes an audio file into a transcription with timestamps and generates a markdown file
 def transcribe(audio_file_path, prompt):
@@ -68,7 +71,7 @@ def transcribe(audio_file_path, prompt):
 
     # Send the API request
     response = client.chat.completions.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-5.6-luna",
         messages=llm_messages
     )
 
@@ -115,7 +118,7 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
 
     # Call OpenAI API with the constructed messages
     response = client.chat.completions.create(
-        model="gpt-4-turbo",
+        model="gpt-5.6-luna",
         messages=messages
     )
 

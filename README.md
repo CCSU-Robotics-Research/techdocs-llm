@@ -75,15 +75,7 @@ then restart terminal and confirm it was set with:
 
 If that doesn't work, then create a file named ".env" in the root folder of the cloned GitHub repository (it should be a hidden file). In the file, write the text `OPENAI_API_KEY=<your-api-key-here>`.  <br />
 
-Then navigate to `transcribe.py` and replace the `client = OpenAI()` code statement with the following code block: 
-
-`from dotenv import load_dotenv` <br />
-`import os`
-
-`load_dotenv(dotenv_path=".env")` <br />
-`client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))`
-
-If you use this code snippet for a custom .env file in your repo, make sure to exclude these changes when making commits. <br />
+Then navigate to `transcribe.py` and fill in the provided API key and organization ID inside the `client = OpenAI()` block. Make sure to exclude these changes when making commits. **Do NOT commit the API key to GitHub.** <br />
 
 ## You can then run the main.py file
 
