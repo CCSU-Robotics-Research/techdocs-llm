@@ -77,12 +77,15 @@ def generate_page(markdown_path):
     </body>
     </html>
     """
-    
+
     # User picks output folder
     folder_selected = filedialog.askdirectory()
+    if not folder_selected:
+        raise ValueError("No output folder selected. Operation cancelled.")
+
     print("LOG :",folder_selected)
-    
-    
+
+
     # Create the path for the output folder
     # parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(markdown_path))))
     # output_dir = os.path.join(parent_dir, "output")
@@ -92,7 +95,7 @@ def generate_page(markdown_path):
     #     os.makedirs(output_dir)
 
     # Generate the output path for the HTML file
-   
+
     markdown_filename = os.path.splitext(os.path.basename(markdown_path))[0]
     print("markdown_filename: ", markdown_filename)
     full_path = os.path.join(folder_selected,f"{markdown_filename}-Folder")

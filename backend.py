@@ -22,9 +22,12 @@ def generate_documentation_from_video(input_video_name, full_input_path, prompt)
     # Clear the temp directory
     print("LOG: Clearing temp directory")
     for folder_path in os.listdir("temp"):
+        full = os.path.join("temp", folder_path)
+        if not os.path.isdir(full):
+            continue
         try:
-            shutil.rmtree(f"temp/{folder_path}")
-            print(f"LOG: Deleted: {folder_path}")
+            shutil.rmtree(full)
+            print(f"LOG: Deleted: {full}")
         except FileNotFoundError:
             print("LOG: Folder not found.")
         except PermissionError:
@@ -56,7 +59,7 @@ def extract_interval_frames(base_filename, full_input_path, transcription, html_
     print("LOG: Beginning interval frame extraction...")
     keyframe_time_intervals, interval_time_txt = obtain_time_intervals(html_file, transcription, base_filename, temp_output_directory)
 
-    # Extract images from the video at the obtained time intervals and capture the directory paths where frames are stored for each interval    
+    # Extract images from the video at the obtained time intervals and capture the directory paths where frames are stored for each interval
     interval_output_directories = interval_frame_extraction(full_input_path, temp_output_directory, base_filename, keyframe_time_intervals,1)
 
     # Capture alt texts into a single array
@@ -77,7 +80,7 @@ def convert_html(html_path):
     output_pdf = html_path.replace(".html", ".pdf")
     HTML(filename=html_path).write_pdf(output_pdf)
     print("LOG: PDF conversion complete.")
-    
+
     docx_file = output_pdf.replace(".pdf", ".docx")
 
     # Create a PDF converter object
