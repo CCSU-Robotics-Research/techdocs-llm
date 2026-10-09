@@ -4,12 +4,12 @@ import os
 import shutil
 from weasyprint import HTML
 from pdf2docx import Converter
-from transcribe import transcribe
-from transcribe import obtain_time_intervals
-from processVideo import preliminary_video_processing
-from processVideo import interval_frame_extraction
+from backend.transcribe import transcribe
+from backend.transcribe import obtain_time_intervals
+from backend.processVideo import preliminary_video_processing
+from backend.processVideo import interval_frame_extraction
 from datetime import datetime
-from generatePage import generate_page
+from frontend.src.generatePage import generate_page
 
 # Given an input video from the GUI, process it into work instructions
 def generate_documentation_from_video(input_video_name, full_input_path, prompt):

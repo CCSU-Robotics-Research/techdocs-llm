@@ -5,10 +5,10 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from tkinterweb import HtmlFrame
-from backend import generate_documentation_from_video
-from backend import generate_new_images
-from backend import convert_html
-from backend import extract_interval_frames
+from backend.backend import generate_documentation_from_video
+from backend.backend import generate_new_images
+from backend.backend import convert_html
+from backend.backend import extract_interval_frames
 from PIL import Image, ImageTk
 import shutil
 import webbrowser
