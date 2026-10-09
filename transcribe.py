@@ -1,13 +1,16 @@
 # transcribe.py contains functions to generate a segmented transcription from an audio file and to find the correct time intervals in the video for image extraction.
 
+import os
+from dotenv import load_dotenv
 from openai import OpenAI
 from pydub import AudioSegment
 import threading
 from queue import Queue
+load_dotenv()
 
 client = OpenAI(
-    api_key="API_KEY_HERE",
-    organization="ORG_ID_HERE"
+    api_key= os.getenv("OPENAI_API_KEY") or "API_KEY_HERE",
+    organization= os.getenv("OPENAI_ORG") or "ORG_ID_HERE"
 ) # Instance to access OpenAI API
 
 # Transcribes an audio file into a transcription with timestamps and generates a markdown file
