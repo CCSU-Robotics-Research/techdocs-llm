@@ -1,5 +1,6 @@
-
-
+import Input from '../../../components/ui/Input/Input.tsx'
+import Button from '../../../components/ui/Button/Button.tsx'
+import { formatBytes } from '../../../utils/formatters.ts'
 import type { ProcessStatus } from '../types.ts'
 
 type FeatureComponentProps = {
@@ -27,15 +28,21 @@ export default function FeatureComponent(props: FeatureComponentProps){
         <section className="context">
             <h2>Please Confirm: Is this the video file you want to process?</h2>
             <p className="context__meta">
-                <strong>Video File:</strong>{videoName}
+                <strong>Video File: </strong>{videoName}
                 <br />
-                <strong>Size:</strong> {formatBytes(videoSizeBytes)}
+                <strong>Size: </strong> {formatBytes(videoSizeBytes)}
             </p>
             <form className="context__form" onSubmit={(event) => {event.preventDefault(); onSubmit()}}>
                 <label>Optionally, enter context for the video: </label>
-                <textarea name="context" rows={10} value={context} disabled={isSubmitting} aria-invalid={Boolean(contextError)}
-                onChange={(event) => onContextChange(event.target.value)}/>
-                {contextError && <p role="alert">{contextError}</p>}
+{/* Needs fixing from previous build to implement an import  */}
+                <div className="context__actions">
+                    <Button type="button" variant="secondary" onClick={onBack} disabled={isSubmitting}>
+                        No, Back to the Main Page
+                    </Button>
+                    <Button type="submit" disabled={!canSubmit}>
+                        {isSubmitting ? 'Processing...': 'Process Video'}
+                    </Button>
+                </div>
             </form>
         </section>
     )
