@@ -23,7 +23,6 @@ export default function FeatureComponent(props: FeatureComponentProps){
 
     const isSubmitting = status === 'submitting'
     const contextError = errorMessage ?? (isTooLong ? 'Context is too long.' : undefined)
-    //missing a function to format the size of the video in bytes...
     return(
         <section className="context">
             <h2>Please Confirm: Is this the video file you want to process?</h2>
@@ -33,8 +32,9 @@ export default function FeatureComponent(props: FeatureComponentProps){
                 <strong>Size: </strong> {formatBytes(videoSizeBytes)}
             </p>
             <form className="context__form" onSubmit={(event) => {event.preventDefault(); onSubmit()}}>
-                <label>Optionally, enter context for the video: </label>
-{/* Needs fixing from previous build to implement an import  */}
+                <Input name="context" label="Optionally, enter context for the video:" rows={10} value={context}
+                        disabled={isSubmitting} error={contextError}
+                        onChange={(event) => onContextChange(event.target.value)}/>
                 <div className="context__actions">
                     <Button type="button" variant="secondary" onClick={onBack} disabled={isSubmitting}>
                         No, Back to the Main Page
