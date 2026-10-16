@@ -1,5 +1,5 @@
 import { createContext, createElement, use, useState, type ReactNode } from 'react'
-import type { ProcessResult } from '../features/contextModification/types.ts'
+import type { ProcessResult } from '../features/contextModification/components/types.ts'
 
 type AppStateValue = {
     video: File | null

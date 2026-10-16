@@ -1,7 +1,7 @@
 import Input from '../../../components/ui/Input/Input.tsx'
 import Button from '../../../components/ui/Button/Button.tsx'
-import { formatBytes } from '../../../utils/formatters.ts'
-import type { ProcessStatus } from '../types.ts'
+import { formatBytes } from '../../../utils/FormatBytes.ts'
+import type { ProcessStatus } from './types.ts'
 
 type FeatureComponentProps = {
     videoName: string

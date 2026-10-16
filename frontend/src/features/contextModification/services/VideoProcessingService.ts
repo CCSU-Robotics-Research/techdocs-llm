@@ -1,4 +1,4 @@
-import type { ProcessResult } from '../types'
+import type { ProcessResult } from '../components/types'
 
 export async function submitContext(video: File, context: string): Promise<ProcessResult> {
     const base = video.name.replace(/\.[^.]+$/, '')

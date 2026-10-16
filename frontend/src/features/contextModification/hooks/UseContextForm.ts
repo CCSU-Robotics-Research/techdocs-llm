@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { DEFAULT_CONTEXT, MAX_CONTEXT_LENGTH } from '../constants.ts'
-import { submitContext } from '../services/service.ts'
+import { DEFAULT_CONTEXT, MAX_CONTEXT_LENGTH } from '../components/constants.ts'
+import { submitContext } from '../services/VideoProcessingService.ts'
 import { useAppState } from '../../../hooks/globalHook.ts'
-import type { ProcessStatus } from '../types.ts'
+import type { ProcessStatus } from '../components/types.ts'
 
 export function useContextModification(){
     const { video, setContext: persistContext, setResult }= useAppState()
@@ -11,7 +11,7 @@ export function useContextModification(){
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const isTooLong = context.length > MAX_CONTEXT_LENGTH
-    const canSubmit = Boolean(video) && context.length > 0 && !isTooLong && status !== 'submitting'
+    const canSubmit = Boolean(video) && !isTooLong && status !== 'submitting'
 
     async function handleSubmit(){
         if(!video){
@@ -25,6 +25,7 @@ export function useContextModification(){
         try{
             const result = await submitContext(video, context)
             setResult(result)
+            setStatus('idle')
             return result
         }catch(error){
             setStatus('error')
