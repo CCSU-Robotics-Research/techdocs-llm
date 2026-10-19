@@ -1,6 +1,6 @@
 import Input from '../../../components/ui/Input/Input.tsx'
 import Button from '../../../components/ui/Button/Button.tsx'
-import { formatBytes } from '../../../utils/FormatBytes.ts'
+import { formatBytes } from '../../../utils/formatBytes.ts'
 import type { ProcessStatus } from './types.ts'
 
 type FeatureComponentProps = {

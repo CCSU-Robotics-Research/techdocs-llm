@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DEFAULT_CONTEXT, MAX_CONTEXT_LENGTH } from '../components/constants.ts'
-import { submitContext } from '../services/VideoProcessingService.ts'
+import { submitContext } from '../services/videoProcessingService.ts'
 import { useAppState } from '../../../hooks/globalHook.ts'
 import type { ProcessStatus } from '../components/types.ts'
 
