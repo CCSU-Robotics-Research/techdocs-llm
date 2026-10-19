@@ -146,14 +146,3 @@ body{
     margin: 0 0 20px;
     line-height: 1.5;
 }
-
-.success-popup button {
-    min-width: 100px;
-    padding: 8px 16px;
-    border: 0;
-    border-radius: 17px;
-    background: var(--blue);
-    color: #fff;
-    font: 700 14px Arial, sans-serif;
-    cursor: pointer;
-}

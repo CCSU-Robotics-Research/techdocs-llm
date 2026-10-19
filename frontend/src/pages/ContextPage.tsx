@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import Button from '../components/ui/Button/Button.tsx'
 import FeatureComponent from '../features/contextModification/components/ContextForm.tsx'
 import { useContextModification } from '../features/contextModification/hooks/useContextForm.ts'
 import { useAppState } from '../hooks/globalHook.ts'
@@ -39,9 +40,9 @@ export default function ContextPage(){
                     >
                         <h2 id="success-popup-title">Video submitted successfully</h2>
                         <p>Your video has been submitted for processing.</p>
-                        <button type="button" autoFocus onClick={() => navigate('/upload')}>
+                        <Button autoFocus onClick={() => navigate('/upload')}>
                             Close
-                        </button>
+                        </Button>
                     </section>
                 </div>
             )}
