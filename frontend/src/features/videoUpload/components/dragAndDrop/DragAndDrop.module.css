@@ -1,0 +1,63 @@
+/*
+Container and instructions
+px hard coded to match collins, prob should change
+*/
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 0;
+}
+
+.container h2 {
+    margin: 6px 0 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: blue;
+
+}
+
+.instructions {
+    margin: 0;
+    font-size: 12px;
+    color: #333;
+}
+
+/*
+Drop box
+*/
+.dropBox {
+    box-sizing: border-box;
+    width: 330px;
+    max-width: 100%;
+    height: 130px;
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 6px solid #e8e8e8;
+    box-shadow: 0 0 0 8px #fff;
+    color: #bbb;
+    font-style: italic;
+    font-size: 14px;
+    text-align: center;
+    padding: 0px;
+    overflow-wrap: anywhere;
+}
+
+/*
+Messages (used by the component)
+*/
+.error {
+    margin: 0;
+    font-size: 14px;
+    color: #c00;
+}
+
+.success {
+    margin: 0;
+    font-size: 14px;
+    color: var(--blue);
+}
