@@ -1,6 +1,6 @@
 # main.py is the entry point of the program. The frontend GUI is launched from here, which then drives backend processes logged in the Terminal.
 
-from frontend.src.frontend import start_frontend
+from backend.legacyGUI import start_frontend
 
 # Start the frontend GUI upon program launch
 def main():

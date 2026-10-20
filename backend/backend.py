@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from pathlib import Path
 from weasyprint import HTML
 from pdf2docx import Converter
 from backend.transcribe import transcribe
@@ -9,7 +10,11 @@ from backend.transcribe import obtain_time_intervals
 from backend.processVideo import preliminary_video_processing
 from backend.processVideo import interval_frame_extraction
 from datetime import datetime
-from frontend.src.generatePage import generate_page
+from backend.generatePage import generate_page
+
+# Resolve relative to this file so "temp" is always found regardless of the working directory the app is launched from
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+TEMP_DIR = PROJECT_ROOT / "temp"
 
 # Given an input video from the GUI, process it into work instructions
 def generate_documentation_from_video(input_video_name, full_input_path, prompt):
@@ -21,8 +26,9 @@ def generate_documentation_from_video(input_video_name, full_input_path, prompt)
 
     # Clear the temp directory
     print("LOG: Clearing temp directory")
-    for folder_path in os.listdir("temp"):
-        full = os.path.join("temp", folder_path)
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    for folder_path in os.listdir(TEMP_DIR):
+        full = os.path.join(TEMP_DIR, folder_path)
         if not os.path.isdir(full):
             continue
         try:
@@ -40,7 +46,7 @@ def generate_documentation_from_video(input_video_name, full_input_path, prompt)
     base_filename = os.path.splitext(os.path.basename(input_video_name))[0]
     date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     global temp_output_directory
-    temp_output_directory = os.path.join("temp", f"{base_filename}_{date_str}")
+    temp_output_directory = os.path.join(TEMP_DIR, f"{base_filename}_{date_str}")
     audio_path = preliminary_video_processing(full_input_path, base_filename, temp_output_directory)
     print("LOG: Audio and video transcode complete.\n")
 
