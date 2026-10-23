@@ -2,9 +2,9 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import ContextPage from './ContextPage.tsx'
-import { useAppState } from '../hooks/globalHook.ts'
-import { useContextModification } from '../features/contextModification/hooks/useContextForm.ts'
-import type { ProcessResult } from '../features/contextModification/components/types.ts'
+import { useAppState } from '../../hooks/globalHook.ts'
+import { useContextModification } from '../../features/contextModification/hooks/useContextForm.ts'
+import type { ProcessResult } from '../../features/contextModification/components/types.ts'
 
 vi.mock('../hooks/globalHook.ts', () => ({
     useAppState: vi.fn(),
