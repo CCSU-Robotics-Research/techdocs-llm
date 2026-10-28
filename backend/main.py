@@ -4,6 +4,10 @@ from pathlib import Path
 from uuid import uuid4
 from backend.processVideo import preliminary_video_processing
 import shutil
+import re
+from pydantic import BaseModel
+from backend.transcribe import transcribe
+from backend.generatePage import generate_page
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
@@ -54,3 +58,27 @@ def upload_video(video: UploadFile):
             "status": "audio ready",
             "audio_path": Path(audio_path).name,
             }
+
+class GenerateRequest(BaseModel):
+    upload_id: str
+    context: str = ""
+
+#Generate a page from a completed upload.
+#Validates the upload ID, ensures the audio is ready, and returns the generated HTML file.
+@app.post("/api/generate")
+def generate(req: GenerateRequest):
+    #Check that the upload ID exists before looking for the job.
+    if not re.fullmatch(r"[0-9a-f]{32}", req.upload_id):
+        raise HTTPException(status_code=400, detail="Invaild upload_id.")
+    job_dir = JOBS_DIR / req.upload_id
+    if not job_dir.is_dir():
+        raise HTTPException(status_code=404, detail="Upload not found.")
+    audio = next(job_dir.glob("*_audio.mp3"), None)
+    if audio is None:
+        raise HTTPException(status_code  =409, detail="Audio not ready for this upload.")
+
+    #Transcribe the audio, then generate the page from the transcript.
+    markdown_path, _ = transcribe(str(audio), req.context)
+    html_path, out_dir = generate_page(markdown_path, output_dir=job_dir / "output")
+
+    return {"upload_id": req.upload_id, "status":"page ready", "html_file": Path(html_path).name}
