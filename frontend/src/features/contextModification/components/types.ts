@@ -1,7 +1,10 @@
 export type ProcessStatus = 'idle' | 'submitting' | 'error'
 
+//Model for the response from the backend when a file is uploaded
 export type ProcessResult = {
-    jobId:string
-    htmlFile:string
-    outputDir:string
+    upload_id: string
+    filename: string
+    content_type: string
+    status: string
+    audio_path: string
 }
