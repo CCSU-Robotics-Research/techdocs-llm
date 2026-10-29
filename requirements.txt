@@ -8,3 +8,6 @@ weasyprint
 pdf2docx
 tkinterweb
 audioop-lts
+fastapi
+uvicorn
+python-multipart

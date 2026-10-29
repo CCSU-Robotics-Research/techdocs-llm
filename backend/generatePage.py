@@ -6,14 +6,14 @@ import re
 from tkinter import filedialog
 import shutil
 # Using a markdown file, generate an HTML page as output
-def generate_page(markdown_path):
+def generate_page(markdown_path, output_dir=None):
 
     # Check if the markdown file exists
     if not os.path.exists(markdown_path):
         raise FileNotFoundError(f"File '{markdown_path}' not found")
 
     # Read the Markdown content
-    with open(markdown_path, 'r') as file:
+    with open(markdown_path, 'r', encoding='utf-8') as file:
         markdown_content = file.read()
 
     # Initialize counter for image numbering
@@ -78,12 +78,21 @@ def generate_page(markdown_path):
     </html>
     """
 
-    # User picks output folder
-    folder_selected = filedialog.askdirectory()
-    if not folder_selected:
-        raise ValueError("No output folder selected. Operation cancelled.")
-
-    print("LOG :",folder_selected)
+    markdown_filename = os.path.splitext(os.path.basename(markdown_path))[0]
+ 
+    if output_dir is not None:
+        # API path: caller supplies a job-scoped folder, no dialog and no deleting of existing folders
+        folder_for_file_path = str(output_dir)
+        os.makedirs(folder_for_file_path, exist_ok=True)
+    else:
+        # Legacy GUI path
+        # User picks output folder
+        from tkinter import filedialog  # imported lazily so the API works without Tk installed
+        folder_selected = filedialog.askdirectory()
+        if not folder_selected:
+            raise ValueError("No output folder selected. Operation cancelled.")
+ 
+        print("LOG :",folder_selected)
 
 
     # Create the path for the output folder
@@ -96,33 +105,33 @@ def generate_page(markdown_path):
 
     # Generate the output path for the HTML file
 
-    markdown_filename = os.path.splitext(os.path.basename(markdown_path))[0]
-    print("markdown_filename: ", markdown_filename)
-    full_path = os.path.join(folder_selected,f"{markdown_filename}-Folder")
-    try:
-        folder_for_file_path = os.makedirs(full_path)
-        folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
-        print("FOLDER_FOR_FILE_PATH: ", folder_for_file_path)
-    except FileExistsError:
-        folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
-        shutil.rmtree(folder_for_file_path)
-        os.makedirs(f"{folder_selected}/{markdown_filename}-Folder")
-        print(f"One or more directories in '{folder_for_file_path}' already exist.")
-    except PermissionError:
-        print(f"Permission denied: Unable to create '{folder_for_file_path}'.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    #folder_path = os.path.join(folder_selected,folder_for_file_path)
-    #print("FOLDER_PATH:  ", folder_path)
+        print("markdown_filename: ", markdown_filename)
+        full_path = os.path.join(folder_selected,f"{markdown_filename}-Folder")
+        try:
+            folder_for_file_path = os.makedirs(full_path)
+            folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
+            print("FOLDER_FOR_FILE_PATH: ", folder_for_file_path)
+        except FileExistsError:
+            folder_for_file_path = f"{folder_selected}/{markdown_filename}-Folder"
+            shutil.rmtree(folder_for_file_path)
+            os.makedirs(f"{folder_selected}/{markdown_filename}-Folder")
+            print(f"One or more directories in '{folder_for_file_path}' already exist.")
+        except PermissionError:
+            print(f"Permission denied: Unable to create '{folder_for_file_path}'.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        #folder_path = os.path.join(folder_selected,folder_for_file_path)
+        #print("FOLDER_PATH:  ", folder_path)
+ 
     output_path = os.path.join(folder_for_file_path,f"{markdown_filename}.html")
     print("output_path: ", output_path)
-
+ 
     # Write the HTML content to a new file
-    with open(output_path, 'w') as file:
+    with open(output_path, 'w', encoding='utf-8') as file:
         file.write(html_page)
-
+ 
     # Return the output path
     return output_path,folder_for_file_path
-
+ 
 # Example usage
 # generate_page("temp/test/example.md")
