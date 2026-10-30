@@ -15,9 +15,9 @@ vi.mock('../features/contextModification/hooks/useContextForm.ts', () => ({
 }))
 
 const submittedResult: ProcessResult = {
-    jobId: 'job-1',
-    htmlFile: 'demo.html',
-    outputDir: 'output/demo',
+    upload_id: '8aa96b1cba6842da92122a17db757aac',
+    status: 'page ready',
+    html_file: 'input_workdocs.html',
 }
 
 const mockHandleSubmit = vi.fn<() => Promise<ProcessResult | null>>()
