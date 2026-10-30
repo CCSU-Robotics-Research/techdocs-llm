@@ -82,3 +82,17 @@ def generate(req: GenerateRequest):
     html_path, out_dir = generate_page(markdown_path, output_dir=job_dir / "output")
 
     return {"upload_id": req.upload_id, "status":"page ready", "html_file": Path(html_path).name}
+
+#Generate documentation from a video in one request by running the upload and generate steps back to back.
+#The context is a form field because a request that includes a file cannot also have a JSON body.
+@app.post("/api/generate-documentation")
+def generate_documentation(video: UploadFile, context: str = Form("")):
+    upload = upload_video(video)
+    page = generate(GenerateRequest(upload_id=upload["upload_id"], context=context))
+
+    return {"filename": upload["filename"],
+            "content_type": upload["content_type"],
+            "upload_id": page["upload_id"],
+            "status": page["status"],
+            "html_file": page["html_file"],
+            }
