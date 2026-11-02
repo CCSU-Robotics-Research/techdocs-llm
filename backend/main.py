@@ -1,5 +1,6 @@
 # main.py is the entry point of the program. The frontend GUI is launched from here, which then drives backend processes logged in the Terminal.
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pathlib import Path
 from uuid import uuid4
 from backend.processVideo import preliminary_video_processing
@@ -96,3 +97,14 @@ def generate_documentation(video: UploadFile, context: str = Form("")):
             "status": page["status"],
             "html_file": page["html_file"],
             }
+
+#Serve the generated HTML page for an upload so the frontend can display it.
+@app.get("/api/documents/{upload_id}")
+def get_document(upload_id: str):
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(status_code=400, detail="Invalid upload_id.")
+    html_path = next((JOBS_DIR / upload_id / "output").glob("*.html"), None)
+    if html_path is None:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    return FileResponse(html_path, media_type="text/html")
