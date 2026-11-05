@@ -1,7 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom'
-import FeatureComponent from '../features/contextModification/components/ContextForm.tsx'
-import { useContextModification } from '../features/contextModification/hooks/useContextForm.ts'
-import { useAppState } from '../hooks/globalHook.ts'
+import FeatureComponent from '../../features/contextModification/components/ContextForm.tsx'
+import { useContextModification } from '../../features/contextModification/hooks/useContextForm.ts'
+import { useAppState } from '../../hooks/globalHook.ts'
 
 export default function ContextPage(){
     const navigate = useNavigate()

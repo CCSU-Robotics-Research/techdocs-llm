@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { useAppState } from '../hooks/globalHook.ts'
-import DragAndDrop from '../features/videoUpload/components/dragAndDrop/DragAndDrop.tsx'
-import BackendStatus from '../components/ui/BackendStatus/BackendStatus.tsx'
+import { useAppState } from '../../hooks/globalHook.ts'
+import DragAndDrop from '../../features/videoUpload/components/dragAndDrop/DragAndDrop.tsx'
+import BackendStatus from '../../components/ui/BackendStatus/BackendStatus.tsx'
 
 export default function HomePage() {
     const navigate = useNavigate()
