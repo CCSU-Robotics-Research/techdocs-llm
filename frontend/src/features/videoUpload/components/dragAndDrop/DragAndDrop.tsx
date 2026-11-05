@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 import Button from '../../../../components/ui/Button/Button.tsx'
 import styles from './DragAndDrop.module.css'
@@ -7,9 +7,10 @@ const VALID_EXTENSIONS = ['.mp4', '.mov', '.avi', '.mkv']
 
 type VideoUploadProps = {
     onFileSelected: (file: File) => void
+    statusIndicator?: ReactNode
 }
 
-export default function VideoUpload({ onFileSelected }: VideoUploadProps) {
+export default function VideoUpload({ onFileSelected, statusIndicator }: VideoUploadProps) {
 
     // Reference and state variables
     const [video, setVideo] = useState<File | null>(null)
@@ -81,19 +82,24 @@ export default function VideoUpload({ onFileSelected }: VideoUploadProps) {
                 hidden
             />
 
-            <Button
-                type="button"
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-            >
-                Browse Files
-            </Button>
-
-            {video && (
-                <Button type="button" onClick={handleConfirm}>
-                    Confirm Video
+            {/*Display the connection status below the available upload buttons.*/}
+            <div className={styles.browseActions}>
+                <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    Browse Files
                 </Button>
-            )}
+                {/*Show the confirm button when a valid video is selected.*/}
+                {video && (
+                    <Button type="button" onClick={handleConfirm}>
+                        Confirm Video
+                    </Button>
+                )}
+
+                {statusIndicator}
+            </div>
 
             {/* Display message -> Error */}
             {message && (

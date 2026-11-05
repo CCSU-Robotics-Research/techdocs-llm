@@ -10,7 +10,6 @@ load_dotenv()
 
 client = OpenAI(
     api_key= os.getenv("OPENAI_API_KEY") or "API_KEY_HERE",
-    organization= os.getenv("OPENAI_ORG") or "ORG_ID_HERE"
 ) # Instance to access OpenAI API
 
 # Transcribes an audio file into a transcription with timestamps and generates a markdown file

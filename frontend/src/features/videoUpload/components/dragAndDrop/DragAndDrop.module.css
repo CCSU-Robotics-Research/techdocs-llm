@@ -47,6 +47,18 @@ Drop box
     overflow-wrap: anywhere;
 }
 
+/*Center the browse button with the connection status directly below it*/
+.browseActions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
 /*
 Messages (used by the component)
 */

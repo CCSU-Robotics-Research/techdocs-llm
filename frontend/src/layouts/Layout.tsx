@@ -12,7 +12,7 @@ export default function Layout(){
             <main className="layout__main">
                 <Outlet />
             </main>
-            <footer className="layout__footer">&copy; 2025 Team P3M | CCSU Robotics Research</footer>
+            <footer className="layout__footer">&copy; 2026 Team Git Up | CCSU Robotics Research</footer>
         </div>
     )
 }

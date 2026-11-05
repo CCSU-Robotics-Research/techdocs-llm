@@ -1,0 +1,32 @@
+/*Connection message and status light layout*/
+.status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+}
+
+/*Shared shape and size for the status light*/
+.dot {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+/*Gray light while waiting for the backend response*/
+.checking .dot {
+    background-color: #6b7280;
+}
+
+/*Green light when the backend reports a healthy status*/
+.connected .dot {
+    background-color: #15803d;
+}
+
+/*Red light when the backend cannot be reached or reports an unexpected status*/
+.unavailable .dot {
+    background-color: #b91c1c;
+}

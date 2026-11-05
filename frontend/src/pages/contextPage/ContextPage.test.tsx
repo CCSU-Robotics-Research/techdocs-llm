@@ -15,9 +15,9 @@ vi.mock('../features/contextModification/hooks/useContextForm.ts', () => ({
 }))
 
 const submittedResult: ProcessResult = {
-    jobId: 'job-1',
-    htmlFile: 'demo.html',
-    outputDir: 'output/demo',
+    upload_id: '8aa96b1cba6842da92122a17db757aac',
+    status: 'page ready',
+    html_file: 'input_workdocs.html',
 }
 
 const mockHandleSubmit = vi.fn<() => Promise<ProcessResult | null>>()
@@ -28,6 +28,7 @@ function renderContextPage() {
             <Routes>
                 <Route path="/context" element={<ContextPage />} />
                 <Route path="/upload" element={<p>Upload page</p>} />
+                <Route path="/preview" element={<p>Preview page</p>} />
             </Routes>
         </MemoryRouter>,
     )
@@ -83,16 +84,12 @@ describe('ContextPage', () => {
         expect(screen.getByRole('button', { name: 'Process Video' })).toBeTruthy()
     })
 
-    it('shows a success dialog after submission and returns to upload when closed', async () => {
+    it('goes to the preview page after submission', async () => {
         renderContextPage()
 
         fireEvent.click(screen.getByRole('button', { name: 'Process Video' }))
 
-        expect(await screen.findByRole('dialog')).toBeTruthy()
+        expect(await screen.findByText('Preview page')).toBeTruthy()
         expect(mockHandleSubmit).toHaveBeenCalledOnce()
-
-        fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-
-        expect(screen.getByText('Upload page')).toBeTruthy()
     })
 })
