@@ -5,7 +5,7 @@ import { useAppState } from '../../../hooks/globalHook.ts'
 import type { ProcessStatus } from '../components/types.ts'
 
 export function useContextModification(){
-    const { video, setContext: persistContext, setResult }= useAppState()
+    const { video, setContext: persistContext }= useAppState()
     const [context, setContextText] = useState(DEFAULT_CONTEXT)
     const [status, setStatus] = useState<ProcessStatus>('idle')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -23,10 +23,9 @@ export function useContextModification(){
         setErrorMessage(null)
         persistContext(context)
         try{
-            const result = await submitContext(video, context)
-            setResult(result)
+            const started = await submitContext(video, context)
             setStatus('idle')
-            return result
+            return started
         }catch(error){
             setStatus('error')
             setErrorMessage(error instanceof Error ? error.message : 'Failed to process the video.')

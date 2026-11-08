@@ -4,23 +4,41 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import ContextPage from './ContextPage.tsx'
 import { useAppState } from '../../hooks/globalHook.ts'
 import { useContextModification } from '../../features/contextModification/hooks/useContextForm.ts'
-import type { ProcessResult } from '../../features/contextModification/components/types.ts'
+import { useJobProgress } from '../../features/progressStages/hooks/useJobProgress.ts'
+import type { ProcessStarted } from '../../features/contextModification/components/types.ts'
+import type { JobStatus } from '../../features/progressStages/components/types.ts'
 
-vi.mock('../hooks/globalHook.ts', () => ({
+vi.mock('../../hooks/globalHook.ts', () => ({
     useAppState: vi.fn(),
 }))
 
-vi.mock('../features/contextModification/hooks/useContextForm.ts', () => ({
+vi.mock('../../features/contextModification/hooks/useContextForm.ts', () => ({
     useContextModification: vi.fn(),
 }))
 
-const submittedResult: ProcessResult = {
-    upload_id: '8aa96b1cba6842da92122a17db757aac',
-    status: 'page ready',
-    html_file: 'input_workdocs.html',
+vi.mock('../../features/progressStages/hooks/useJobProgress.ts', () => ({
+    useJobProgress: vi.fn(),
+}))
+
+const uploadId = '8aa96b1cba6842da92122a17db757aac'
+
+const startedJob: ProcessStarted = {
+    upload_id: uploadId,
+    filename: 'demo.mp4',
+    content_type: 'video/mp4',
+    status: 'processing',
 }
 
-const mockHandleSubmit = vi.fn<() => Promise<ProcessResult | null>>()
+const mockHandleSubmit = vi.fn<() => Promise<ProcessStarted | null>>()
+const mockSetResult = vi.fn()
+
+//Report the given job status once a job has started, and no progress before that.
+function mockJobProgress(job: JobStatus) {
+    vi.mocked(useJobProgress).mockImplementation((id) => ({
+        job: id ? job : null,
+        errorMessage: null,
+    }))
+}
 
 function renderContextPage() {
     return render(
@@ -47,7 +65,7 @@ describe('ContextPage', () => {
             result: null,
             setVideo: () => undefined,
             setContext: () => undefined,
-            setResult: () => undefined,
+            setResult: mockSetResult,
         })
         vi.mocked(useContextModification).mockReturnValue({
             context: 'Handle the robot safely.',
@@ -58,7 +76,8 @@ describe('ContextPage', () => {
             canSubmit: true,
             handleSubmit: mockHandleSubmit,
         })
-        mockHandleSubmit.mockResolvedValue(submittedResult)
+        vi.mocked(useJobProgress).mockReturnValue({ job: null, errorMessage: null })
+        mockHandleSubmit.mockResolvedValue(startedJob)
     })
 
     it('redirects to upload when no video is selected', () => {
@@ -76,20 +95,47 @@ describe('ContextPage', () => {
         expect(screen.getByText('Upload page')).toBeTruthy()
     })
 
-    it('shows the selected video and context form', () => {
+    it('shows the selected video and context form without a progress bar', () => {
         renderContextPage()
 
         expect(screen.getByText('demo.mp4', { exact: false })).toBeTruthy()
         expect(screen.getByRole('textbox', { name: 'Optionally, enter context for the video:' })).toBeTruthy()
         expect(screen.getByRole('button', { name: 'Process Video' })).toBeTruthy()
+        expect(screen.queryByRole('progressbar')).toBeNull()
     })
 
-    it('goes to the preview page after submission', async () => {
+    it('shows the current stage and progress while the video is processing', async () => {
+        mockJobProgress({ upload_id: uploadId, stage: 'transcribing', progress: 50 })
+        renderContextPage()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Process Video' }))
+
+        expect(await screen.findByText('Transcribing audio… (50%)')).toBeTruthy()
+        expect(screen.getByRole('progressbar').getAttribute('value')).toBe('50')
+        expect(vi.mocked(useJobProgress)).toHaveBeenLastCalledWith(uploadId)
+        expect(screen.getByRole('button', { name: 'Processing...' }).hasAttribute('disabled')).toBe(true)
+    })
+
+    it('goes to the preview page when processing is done', async () => {
+        mockJobProgress({ upload_id: uploadId, stage: 'done', progress: 100, html_file: 'input_workdocs.html' })
         renderContextPage()
 
         fireEvent.click(screen.getByRole('button', { name: 'Process Video' }))
 
         expect(await screen.findByText('Preview page')).toBeTruthy()
+        expect(mockSetResult).toHaveBeenCalledWith({ upload_id: uploadId, status: 'done', html_file: 'input_workdocs.html' })
         expect(mockHandleSubmit).toHaveBeenCalledOnce()
+    })
+
+    it('shows the error and allows resubmitting when processing fails', async () => {
+        mockJobProgress({ upload_id: uploadId, stage: 'transcribing', progress: 50, failed: true, detail: 'Processing failed.' })
+        renderContextPage()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Process Video' }))
+
+        expect(await screen.findByText('Processing failed.')).toBeTruthy()
+        expect(screen.queryByRole('progressbar')).toBeNull()
+        expect(screen.getByRole('button', { name: 'Process Video' }).hasAttribute('disabled')).toBe(false)
+        expect(mockSetResult).not.toHaveBeenCalled()
     })
 })
