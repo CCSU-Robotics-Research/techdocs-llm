@@ -1,6 +1,9 @@
 import re
 import shutil
 import threading
+import os
+import datetime
+import json
 from pathlib import Path
 from backend.transcribe import obtain_time_intervals
 from backend.processVideo import interval_frame_extraction
@@ -92,7 +95,8 @@ def _clear_selections(job: Path) -> None:
 
 def _clear_all_frame_dirs(job: Path) -> None:
 
-def _clear_frame_dir(job: Path) -> None
+def _clear_frame_dir(job: Path) -> None:
+    
 
 
 
