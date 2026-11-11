@@ -34,7 +34,7 @@ def _job_dir(upload_id: str) -> Path:
         raise KeyframeError(400, "Invalid upload_id")
     job = JOBS_DIR / upload_id
     if not job.is_dir():
-        raise KeyframeError(400, "Upload not found")
+        raise KeyframeError(404, "Upload not found")
     return job
 
 #Finds the original uploaded video for FFmpeg extraction
@@ -87,6 +87,14 @@ def _cache_is_valid(job: Path) -> bool:
 def _list_frame_images(job: Path, frame: int) -> list[Path]:
 
 def _write_metadata(job: Path, data: dict) -> None:
+
+def _clear_selections(job: Path) -> None:
+
+def _clear_all_frame_dirs(job: Path) -> None:
+
+def _clear_frame_dir(job: Path) -> None
+
+
 
 #Used in client provided frame or filepath component 
 def _safe_child(base: Path, *parts: str) -> Path:
