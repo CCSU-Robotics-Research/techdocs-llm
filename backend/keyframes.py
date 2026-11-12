@@ -14,6 +14,7 @@ DEFAULT_FPS = 1.0
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv"}
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 UPLOAD_ID_RE = re.compile(r"^[0-9a-f]{32}$")
+PLACEHOLDER_RE = re.compile(r'<img>\b[^>]*\bsrc=["\']frame_(\d+)\.jpg["\']', re.IGNORECASE)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
 
@@ -83,13 +84,73 @@ def _frame_dir(job: Path, frame: int) -> Path:
 def _output_dir(job: Path) -> Path:
     return job / "output"
 
+#Reject malformed/corrupted LLM output before running FFmpeg
 def _validate_intervals(metadata_intervals: list[dict], html_text: str) -> None:
+    if not metadata_intervals:
+        raise KeyframeError(502, "Generator returned no keyframe intervals")
 
+    frames = [iv["frame"] for iv in metadata_intervals]
+
+    if len(frames) != len(set(frames)):
+        raise KeyframeError(502, "Generator returned dupe frmae numbers.")
+
+    expected = set(range(1, len(frames) + 1))
+    if set(frames) != expected:
+        raise KeyframeError(502, f"Generator returned non-contiguous frames: {sorted(frames)}")
+
+    for iv in metadata_intervals:
+        if iv["start"] >= iv ["end"]:
+            raise KeyframeError(502, f"Invalid interval for frame {iv['frame']}: " f"{iv['start']} >= {iv['end']}")
+
+    placeholders = PLACEHOLDER_RE.findall(html_text)
+    if len(placeholders) != len(metadata_intervals):
+        raise KeyframeError(502, f"Generator returned {len(metadata_intervals)} intervals " f"but the HTML contains {len(placeholders)} image placeholders")
+
+#Decides whether extraction can be skipped without re-running OpenAI/FFmpeg
 def _cache_is_valid(job: Path) -> bool:
+    metadata_path = job / "keyframes.json"
+    if not metadata_path.is_file():
+        return False
+    try:
+        data = json.loads(metadata_path.read_text(encoding="utf-8"))
+        intervals = data.get("intervals", [])
 
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    if not intervals:
+        return False
+
+    for interval in intervals:
+        frames = _list_frame_images(job, interval["frame"])
+        if not frames:
+            return False
+
+    return True
+
+#Gets the candidate images for a frame 
 def _list_frame_images(job: Path, frame: int) -> list[Path]:
+    frame_dir = _frame_dir(job, frame)
+    if not frame_dir.is_dir():
+        return[]
 
+    images = [
+        path for path in frame_dir.iterdir()
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+    ]
+
+    def sort_key(path: Path):
+        stem = path.stem
+        return(0, int(stem)) if stem.isdigit() else(1, path.name)
+
+    return sorted(images, key=sort_key)
+
+#Allows readers to never see a half written file
 def _write_metadata(job: Path, data: dict) -> None:
+    data["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    tmp = job/"keyframes.json.tmp"
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    os.replace(tmp, job / "keyframes.json")
 
 def _load_metadata(job: Path) -> dict:
     path = job / "keyframes.json"
