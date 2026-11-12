@@ -27,7 +27,7 @@ class KeyframeError(Exception):
 _LOCKS: dict[str, threading.lock] = {}
 _LOCKS_GUARD = threading.Lock()
 
-def _lock_for(upload_id: str) -> threading.Lock:
+def _lock_for(upload_id: str) -> threading.RLock:
     with _LOCKS_GUARD:
         return _LOCKS.setdefault(upload_id, threading.Lock())
 
@@ -90,6 +90,18 @@ def _cache_is_valid(job: Path) -> bool:
 def _list_frame_images(job: Path, frame: int) -> list[Path]:
 
 def _write_metadata(job: Path, data: dict) -> None:
+
+def _load_metadata(job: Path) -> dict:
+    path = job / "keyframes.json"
+    if not path.is_file():
+        raise KeyframeError(409, "Keyframes have not been extracted for this upload")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise KeyframeError(500, "Keyframe metadata is corrupted") from exc
+    if not data.get("intervals"):
+        raise KeyframeError(409, "Keyframes have not been extracted for this upload")
+    return data
 
 def _clear_selections(job: Path) -> None:
 
@@ -171,6 +183,58 @@ def extract_keyframes(upload_id: str, force: bool = False) -> dict:
 
 def get_keyframe_state(upload_id: str) -> dict:
     job = _job_dir(upload_id)
+    with _lock_for(upload_id):
+        try:
+            metadata = _load_metadata(job)
+        except KeyframeError as exc:
+            if exc.status_code == 409:
+                return {
+                    "upload_id": job.name,
+                    "status": "not_extracted",
+                    "intervals": [],
+                    "missing_frames": [],
+                }
+            raise
+
+        intervals = []
+        missing = []
+
+        for iv in metadata["intervals"]:
+            frame = iv["frame"]
+            images = _list_frame_images(job, frame)
+            selected_path = _output_dir(job) / f"frame_{frame}.jpg"
+            selected = selected_path.name if selected_path.is_file() else None
+
+            if selected is None:
+                missing.append(frame)
+
+            intervals.append({
+                "frame": frame,
+                "alt_text": iv["alt"],
+                "start": iv["start"],
+                "end": iv["end"],
+                "fps": iv.get("fps", DEFAULT_FPS),
+                "selected": selected,
+                "images": [
+                    {
+                        "name": path.name,
+                        "index": int(path.stem),
+                        "timestamp": round(
+                            iv["start"] + (int(path.stem) - 1) / iv.get("fps", DEFAULT_FPS),
+                            2,
+                        ),
+                        "url": f"/api/keyframes/{job.name}/frames/{frame}/{path.name}",
+                    }
+                    for path in images
+                ],
+            })
+
+        return {
+            "upload_id": job.name,
+            "status": "complete" if not missing else "ready",
+            "intervals": intervals,
+            "missing_frames": missing,
+        }
 
 def select_keyframe(upload_id, frame, image) -> dict:
     with _lock_for(upload_id):
