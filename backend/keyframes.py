@@ -24,7 +24,7 @@ class KeyframeError(Exception):
         self.detail = detail
 
 #Sync Endpoints run in a thread pool 
-#Locks to ensure that only one thread is ever accesses the code
+#Locks needed to ensure that only one thread is ever accessing the code
 _LOCKS: dict[str, threading.lock] = {}
 _LOCKS_GUARD = threading.Lock()
 
@@ -165,13 +165,29 @@ def _load_metadata(job: Path) -> dict:
     return data
 
 def _clear_selections(job: Path) -> None:
+    output_dir = _output_dir(job)
+    if not output_dir.is_dir():
+        return
+    for path in output_dir.glob("frame_*.jpg"):
+        if path.is_file():
+            path.unlink()
 
 def _clear_all_frame_dirs(job: Path) -> None:
+    for path in job.glob("input_frame_*.jpg_frames"):
+        if path.is_dir():
+            shutil.rmtree(path)
 
-def _clear_frame_dir(job: Path) -> None:
-    
 
-
+def _clear_frame_dir(job: Path, frame: int) -> None:
+    frame_dir = _frame_dir(job, frame)
+    if not frame_dir.exists():
+        return
+    if not frame_dir.is_dir():
+        raise KeyframeError(500, f"Frame path is not a directory: {frame_dir.name}")
+    try:
+        shutil.rmtree(frame_dir)
+    except OSError as exc:
+        raise KeyframeError(500, f"Could not clear frames for frame {frame}: {exc}") from exc
 
 #Used in client provided frame or filepath component 
 def _safe_child(base: Path, *parts: str) -> Path:
