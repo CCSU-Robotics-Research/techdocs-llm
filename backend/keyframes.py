@@ -189,6 +189,60 @@ def _clear_frame_dir(job: Path, frame: int) -> None:
     except OSError as exc:
         raise KeyframeError(500, f"Could not clear frames for frame {frame}: {exc}") from exc
 
+def _validate_image_name(name: str) -> None:
+    if not isinstance(name, str) or not name or Path(name).name != name:
+        raise KeyframeError(400, "Invalid image name")
+    if Path(name).suffix.lower() not in IMAGE_EXTENSIONS:
+        raise KeyframeError(400, "Invalid image type")
+
+def _find_interval(metadata: dict, frame: int) -> dict:
+    for interval in metadata["intervals"]:
+        if interval["frame"] == frame:
+            return interval
+    raise KeyframeError(400, f"Frame {frame} is not part of this extraction")
+
+def _atomic_copy(source: Path, destination: Path) -> None:
+    tmp = destination.with_name(destination.name + ".tmp")
+    try:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, tmp)
+        os.replace(tmp, destination)
+    except OSError as exc:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise KeyframeError(500, f"Could not copy {source.name}: {exc}") from exc
+    
+#Builds the per-interval response object shared by state/select
+def _interval_state(job: Path, interval: dict) -> dict:
+    frame = interval["frame"]
+    fps = interval.get("fps", DEFAULT_FPS)
+    selected_path = _output_dir(job) / f"frame_{frame}.jpg"
+    selected = selected_path.name if selected_path.is_file() else None
+
+    return {
+        "frame": frame,
+        "alt_text": interval["alt"],
+        "start": interval["start"],
+        "end": interval["end"],
+        "fps": fps,
+        "selected": selected,
+        "images": [
+            {
+                "name": path.name,
+                "index": int(path.stem),
+                "timestamp": round(
+                    interval["start"] + (int(path.stem) - 1) / fps,
+                    2,
+                ),
+                "url": f"/api/keyframes/{job.name}/frames/{frame}/{path.name}",
+            }
+            for path in _list_frame_images(job, frame)
+            if path.stem.isdigit()
+        ],
+    }
+
 #Used in client provided frame or filepath component 
 def _safe_child(base: Path, *parts: str) -> Path:
     candidate = base.joinpath(*parts).resolve()
@@ -277,34 +331,10 @@ def get_keyframe_state(upload_id: str) -> dict:
         missing = []
 
         for iv in metadata["intervals"]:
-            frame = iv["frame"]
-            images = _list_frame_images(job, frame)
-            selected_path = _output_dir(job) / f"frame_{frame}.jpg"
-            selected = selected_path.name if selected_path.is_file() else None
-
-            if selected is None:
-                missing.append(frame)
-
-            intervals.append({
-                "frame": frame,
-                "alt_text": iv["alt"],
-                "start": iv["start"],
-                "end": iv["end"],
-                "fps": iv.get("fps", DEFAULT_FPS),
-                "selected": selected,
-                "images": [
-                    {
-                        "name": path.name,
-                        "index": int(path.stem),
-                        "timestamp": round(
-                            iv["start"] + (int(path.stem) - 1) / iv.get("fps", DEFAULT_FPS),
-                            2,
-                        ),
-                        "url": f"/api/keyframes/{job.name}/frames/{frame}/{path.name}",
-                    }
-                    for path in images
-                ],
-            })
+            state = _interval_state(job, iv)
+            if state["selected"] is None:
+                missing.append(iv["frame"])
+            intervals.append(state)
 
         return {
             "upload_id": job.name,
@@ -313,6 +343,24 @@ def get_keyframe_state(upload_id: str) -> dict:
             "missing_frames": missing,
         }
 
-def select_keyframe(upload_id, frame, image) -> dict:
+def select_keyframe(upload_id: str, frame: int, image: str) -> dict:
     with _lock_for(upload_id):
         job = _job_dir(upload_id)
+        metadata = _load_metadata(job)
+        interval = _find_interval(metadata, frame)
+
+        _validate_image_name(image)
+        if image not in {p.name for p in _list_frame_images(job, frame)}:
+            raise KeyframeError(400, f"{image} is not a candidate for frame {frame}")
+
+        source = _safe_child(_frame_dir(job, frame), image)
+        destination = _safe_child(_output_dir(job), f"frame_{frame}.jpg")
+        if not source.is_file():
+            raise KeyframeError(404, "Candidate image not found")
+
+        _atomic_copy(source, destination)
+
+        return {
+            "interval": _interval_state(job, interval),
+            "state": get_keyframe_state(upload_id),
+        }
