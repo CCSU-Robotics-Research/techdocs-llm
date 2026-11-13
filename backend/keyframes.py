@@ -14,7 +14,7 @@ DEFAULT_FPS = 1.0
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv"}
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 UPLOAD_ID_RE = re.compile(r"^[0-9a-f]{32}$")
-PLACEHOLDER_RE = re.compile(r'<img>\b[^>]*\bsrc=["\']frame_(\d+)\.jpg["\']', re.IGNORECASE)
+PLACEHOLDER_RE = re.compile(r'<img\b[^>]*\bsrc=["\']frame_(\d+)\.jpg["\']', re.IGNORECASE)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
 
@@ -25,12 +25,12 @@ class KeyframeError(Exception):
 
 #Sync Endpoints run in a thread pool 
 #Locks needed to ensure that only one thread is ever accessing the code
-_LOCKS: dict[str, threading.lock] = {}
+_LOCKS: dict[str, threading.RLock] = {}
 _LOCKS_GUARD = threading.Lock()
 
 def _lock_for(upload_id: str) -> threading.RLock:
     with _LOCKS_GUARD:
-        return _LOCKS.setdefault(upload_id, threading.Lock())
+        return _LOCKS.setdefault(upload_id, threading.RLock())
 
 #Helper functions
 def _job_dir(upload_id: str) -> Path:
@@ -92,7 +92,7 @@ def _validate_intervals(metadata_intervals: list[dict], html_text: str) -> None:
     frames = [iv["frame"] for iv in metadata_intervals]
 
     if len(frames) != len(set(frames)):
-        raise KeyframeError(502, "Generator returned dupe frmae numbers.")
+        raise KeyframeError(502, "Generator returned duplicate frame numbers.")
 
     expected = set(range(1, len(frames) + 1))
     if set(frames) != expected:
@@ -173,7 +173,7 @@ def _clear_selections(job: Path) -> None:
             path.unlink()
 
 def _clear_all_frame_dirs(job: Path) -> None:
-    for path in job.glob("input_frame_*.jpg_frames"):
+    for path in job.glob("input_frame_*_jpg_frames"):
         if path.is_dir():
             shutil.rmtree(path)
 
