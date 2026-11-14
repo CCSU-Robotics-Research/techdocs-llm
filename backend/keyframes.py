@@ -108,25 +108,11 @@ def _validate_intervals(metadata_intervals: list[dict], html_text: str) -> None:
 
 #Decides whether extraction can be skipped without re-running OpenAI/FFmpeg
 def _cache_is_valid(job: Path) -> bool:
-    metadata_path = job / "keyframes.json"
-    if not metadata_path.is_file():
-        return False
     try:
-        data = json.loads(metadata_path.read_text(encoding="utf-8"))
-        intervals = data.get("intervals", [])
-
-    except (OSError, json.JSONDecodeError):
+        metadata = _load_metadata(job)
+    except KeyframeError:
         return False
-
-    if not intervals:
-        return False
-
-    for interval in intervals:
-        frames = _list_frame_images(job, interval["frame"])
-        if not frames:
-            return False
-
-    return True
+    return all(_list_frame_images(job, iv["frame"]) for iv in metadata["intervals"])
 
 #Gets the candidate images for a frame 
 def _list_frame_images(job: Path, frame: int) -> list[Path]:
@@ -134,16 +120,15 @@ def _list_frame_images(job: Path, frame: int) -> list[Path]:
     if not frame_dir.is_dir():
         return[]
 
+    #Extraction only produces numbered files (1.jpg, 2.jpg, ...) so anything else is ignored
     images = [
         path for path in frame_dir.iterdir()
-        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+        if path.is_file()
+        and path.suffix.lower() in IMAGE_EXTENSIONS
+        and path.stem.isdigit()
     ]
 
-    def sort_key(path: Path):
-        stem = path.stem
-        return(0, int(stem)) if stem.isdigit() else(1, path.name)
-
-    return sorted(images, key=sort_key)
+    return sorted(images, key=lambda path: int(path.stem))
 
 #Allows readers to never see a half written file
 def _write_metadata(job: Path, data: dict) -> None:
@@ -188,33 +173,8 @@ def _clear_frame_dir(job: Path, frame: int) -> None:
         shutil.rmtree(frame_dir)
     except OSError as exc:
         raise KeyframeError(500, f"Could not clear frames for frame {frame}: {exc}") from exc
-
-def _validate_image_name(name: str) -> None:
-    if not isinstance(name, str) or not name or Path(name).name != name:
-        raise KeyframeError(400, "Invalid image name")
-    if Path(name).suffix.lower() not in IMAGE_EXTENSIONS:
-        raise KeyframeError(400, "Invalid image type")
-
-def _find_interval(metadata: dict, frame: int) -> dict:
-    for interval in metadata["intervals"]:
-        if interval["frame"] == frame:
-            return interval
-    raise KeyframeError(400, f"Frame {frame} is not part of this extraction")
-
-def _atomic_copy(source: Path, destination: Path) -> None:
-    tmp = destination.with_name(destination.name + ".tmp")
-    try:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, tmp)
-        os.replace(tmp, destination)
-    except OSError as exc:
-        try:
-            tmp.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise KeyframeError(500, f"Could not copy {source.name}: {exc}") from exc
     
-#Builds the per-interval response object shared by state/select
+#Builds the per-interval response object shared by state/select/refine
 def _interval_state(job: Path, interval: dict) -> dict:
     frame = interval["frame"]
     fps = interval.get("fps", DEFAULT_FPS)
@@ -239,10 +199,24 @@ def _interval_state(job: Path, interval: dict) -> dict:
                 "url": f"/api/keyframes/{job.name}/frames/{frame}/{path.name}",
             }
             for path in _list_frame_images(job, frame)
-            if path.stem.isdigit()
         ],
     }
 
+#Copies a file so readers never see a half written destination
+def _atomic_copy(source: Path, destination: Path) -> None:
+    tmp = destination.with_name(destination.name + ".tmp")
+    try:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, tmp)
+        os.replace(tmp, destination)
+    except OSError as exc:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise KeyframeError(500, f"Could not copy {source.name}: {exc}") from exc
+
+#Keeps the legacy interval file in sync so legacyGUI.py can still parse it
 def _update_interval_txt(job: Path, frame: int, start: float, end: float, alt: str) -> None:
     path = job / "input_keyframe_time_intervals.txt"
     new_line = f'[frame_{frame}] {start:.2f}-{end:.2f} | "{alt}"'
@@ -261,6 +235,27 @@ def _update_interval_txt(job: Path, frame: int, start: float, end: float, alt: s
     tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
     os.replace(tmp, path)
 
+#Shared input checks for client provided image names
+def _validate_image_name(name: str) -> None:
+    if not isinstance(name, str) or not name or Path(name).name != name:
+        raise KeyframeError(400, "Invalid image name")
+    if Path(name).suffix.lower() not in IMAGE_EXTENSIONS:
+        raise KeyframeError(400, "Invalid image type")
+
+def _find_interval(metadata: dict, frame: int) -> dict:
+    interval = next((iv for iv in metadata["intervals"] if iv["frame"] == frame), None)
+    if interval is None:
+        raise KeyframeError(400, f"Frame {frame} is not part of this extraction")
+    return interval
+
+#Shared by both resolvers: validate the name, confine it to base, require it to exist
+def _resolve_image(base: Path, filename: str, label: str) -> Path:
+    _validate_image_name(filename)
+    path = _safe_child(base, filename)
+    if not path.is_file():
+        raise KeyframeError(404, f"{label} not found")
+    return path
+
 #Used in client provided frame or filepath component 
 def _safe_child(base: Path, *parts: str) -> Path:
     candidate = base.joinpath(*parts).resolve()
@@ -268,7 +263,6 @@ def _safe_child(base: Path, *parts: str) -> Path:
     if base_res != candidate and base_res not in candidate.parents:
         raise KeyframeError(400, "Invalid path")
     return candidate
-
 #Service functions
 def extract_keyframes(upload_id: str, force: bool = False) -> dict:
     with _lock_for(upload_id):
@@ -372,16 +366,16 @@ def select_keyframe(upload_id: str, frame: int, image: str) -> dict:
             raise KeyframeError(400, f"{image} is not a candidate for frame {frame}")
 
         source = _safe_child(_frame_dir(job, frame), image)
-        destination = _safe_child(_output_dir(job), f"frame_{frame}.jpg")
         if not source.is_file():
             raise KeyframeError(404, "Candidate image not found")
 
-        _atomic_copy(source, destination)
+        _atomic_copy(source, _output_dir(job) / f"frame_{frame}.jpg")
 
         return {
             "interval": _interval_state(job, interval),
             "state": get_keyframe_state(upload_id),
         }
+
 
 def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
     with _lock_for(upload_id):
@@ -399,12 +393,10 @@ def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
             _validate_image_name(name)
             if name not in candidates:
                 raise KeyframeError(400, f"{name} is not a candidate for frame {frame}")
-            if not Path(name).stem.isdigit():
-                raise KeyframeError(400, f"{name} does not have a numeric frame index")
 
         current_fps = float(interval.get("fps", DEFAULT_FPS))
         if current_fps <= 0:
-            current_fps = DEAFULT_FPS
+            current_fps = DEFAULT_FPS
 
         idx_a = int(Path(images[0]).stem)
         idx_b = int(Path(images[1]).stem)
@@ -413,7 +405,7 @@ def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
         t1, t2 = sorted((t_a, t_b))
 
         if t2 <= t1:
-            raise KeyframesError(400, "Chosen frames do not span a valid interval")
+            raise KeyframeError(400, "Chosen frames do not span a valid interval")
 
         new_fps = REFINE_FRAME_COUNT / (t2 - t1)
 
@@ -432,6 +424,7 @@ def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
         if not new_images:
             raise KeyframeError(500, f"Refinement produced no frames for frame {frame}")
 
+        #Derive FPS from what FFmpeg actually produced so timestamps stay accurate
         actual_fps = len(new_images) / (t2 - t1)
 
         interval["start"] = t1
@@ -441,6 +434,7 @@ def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
         _write_metadata(job, metadata)
         _update_interval_txt(job, frame, t1, t2, interval["alt"])
 
+        #The old selection no longer matches any candidate
         stale = _output_dir(job) / f"frame_{frame}.jpg"
         if stale.is_file():
             stale.unlink()
@@ -449,3 +443,44 @@ def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
             "interval": _interval_state(job, interval),
             "state": get_keyframe_state(upload_id),
         }
+
+
+def finalize_keyframes(upload_id: str) -> dict:
+    with _lock_for(upload_id):
+        job = _job_dir(upload_id)
+        state = get_keyframe_state(upload_id)
+
+        if state["status"] == "not_extracted":
+            raise KeyframeError(409, "Keyframes have not been extracted for this upload")
+
+        if state["missing_frames"]:
+            raise KeyframeError(
+                409,
+                {
+                    "message": "Not all keyframes have been selected",
+                    "missing_frames": state["missing_frames"],
+                },
+            )
+
+        _find_html(job)
+
+        return {
+            "upload_id": upload_id,
+            "status": "complete",
+            "document_url": f"/api/documents/{upload_id}",
+            "assets_url": f"/api/documents/{upload_id}/assets/",
+        }
+
+
+#Serves candidate images from input_frame_N_jpg_frames/
+def resolve_frame_image(upload_id: str, frame: int, filename: str) -> Path:
+    job = _job_dir(upload_id)
+    if frame < 1:
+        raise KeyframeError(400, "Invalid frame number")
+    return _resolve_image(_frame_dir(job, frame), filename, "Image")
+
+
+#Serves final selected images from output/
+def resolve_document_asset(upload_id: str, filename: str) -> Path:
+    job = _job_dir(upload_id)
+    return _resolve_image(_output_dir(job), filename, "Asset")
