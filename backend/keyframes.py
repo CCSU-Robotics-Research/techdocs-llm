@@ -243,6 +243,24 @@ def _interval_state(job: Path, interval: dict) -> dict:
         ],
     }
 
+def _update_interval_txt(job: Path, frame: int, start: float, end: float, alt: str) -> None:
+    path = job / "input_keyframe_time_intervals.txt"
+    new_line = f'[frame_{frame}] {start:.2f}-{end:.2f} | "{alt}"'
+    line_re = re.compile(rf"^\s*\[frame_{frame}\]")
+
+    lines = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+
+    for i, line in enumerate(lines):
+        if line_re.match(line):
+            lines[i] = new_line
+            break
+    else:
+        lines.append(new_line)
+
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+
 #Used in client provided frame or filepath component 
 def _safe_child(base: Path, *parts: str) -> Path:
     candidate = base.joinpath(*parts).resolve()
@@ -359,6 +377,73 @@ def select_keyframe(upload_id: str, frame: int, image: str) -> dict:
             raise KeyframeError(404, "Candidate image not found")
 
         _atomic_copy(source, destination)
+
+        return {
+            "interval": _interval_state(job, interval),
+            "state": get_keyframe_state(upload_id),
+        }
+
+def refine_keyframe(upload_id: str, frame: int, images: list[str]) -> dict:
+    with _lock_for(upload_id):
+        job = _job_dir(upload_id)
+        metadata = _load_metadata(job)
+        interval = _find_interval(metadata, frame)
+
+        if not isinstance(images, list) or len(images) != 2:
+            raise KeyframeError(400, "Exactly two images are required")
+        if images[0] == images[1]:
+            raise KeyframeError(400, "The two images must be different")
+
+        candidates = {p.name for p in _list_frame_images(job, frame)}
+        for name in images:
+            _validate_image_name(name)
+            if name not in candidates:
+                raise KeyframeError(400, f"{name} is not a candidate for frame {frame}")
+            if not Path(name).stem.isdigit():
+                raise KeyframeError(400, f"{name} does not have a numeric frame index")
+
+        current_fps = float(interval.get("fps", DEFAULT_FPS))
+        if current_fps <= 0:
+            current_fps = DEAFULT_FPS
+
+        idx_a = int(Path(images[0]).stem)
+        idx_b = int(Path(images[1]).stem)
+        t_a = interval["start"] + (idx_a - 1) / current_fps
+        t_b = interval["start"] + (idx_b - 1) / current_fps
+        t1, t2 = sorted((t_a, t_b))
+
+        if t2 <= t1:
+            raise KeyframesError(400, "Chosen frames do not span a valid interval")
+
+        new_fps = REFINE_FRAME_COUNT / (t2 - t1)
+
+        _clear_frame_dir(job, frame)
+        video = _find_video(job)
+
+        interval_frame_extraction(
+            str(video),
+            str(job),
+            "input",
+            [(f"frame_{frame}", interval["alt"], t1, t2)],
+            new_fps,
+        )
+
+        new_images = _list_frame_images(job, frame)
+        if not new_images:
+            raise KeyframeError(500, f"Refinement produced no frames for frame {frame}")
+
+        actual_fps = len(new_images) / (t2 - t1)
+
+        interval["start"] = t1
+        interval["end"] = t2
+        interval["fps"] = actual_fps
+
+        _write_metadata(job, metadata)
+        _update_interval_txt(job, frame, t1, t2, interval["alt"])
+
+        stale = _output_dir(job) / f"frame_{frame}.jpg"
+        if stale.is_file():
+            stale.unlink()
 
         return {
             "interval": _interval_state(job, interval),
