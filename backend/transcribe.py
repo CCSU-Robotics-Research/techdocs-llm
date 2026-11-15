@@ -44,7 +44,7 @@ def transcribe(audio_file_path, prompt):
 
     # Save transcription with timestamps as a .txt file
     output_file_path = audio_file_path.replace('_audio.mp3', '_transcription.txt')
-    with open(output_file_path, "w") as f:
+    with open(output_file_path, "w", encoding="utf-8") as f:
         f.write(full_transcription)
         print("Transcription saved to: " + output_file_path)
 
@@ -79,7 +79,7 @@ def transcribe(audio_file_path, prompt):
 
     # Save the created work instructions as a markdown file
     output_file_path = audio_file_path.replace('_audio.mp3', '_workdocs.md')
-    with open(output_file_path, "w") as f:
+    with open(output_file_path, "w", encoding="utf-8") as f:
         f.write(response.choices[0].message.content)
         print("Markdown saved to: ", output_file_path)
         print(output_file_path)
@@ -91,7 +91,7 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
 
     # Read the HTML file with alt text into a string
     html_contents = ""
-    with open(html_file, "r") as file:
+    with open(html_file, "r", encoding="utf-8") as file:
         html_contents = file.read()
 
     # Prompt to be sent to OpenAI API
@@ -201,7 +201,7 @@ def obtain_time_intervals(html_file, transcription, base_filename, output_direct
 
     # Save the captured time intervals in a .txt file as a record
     output_file_path = output_directory + "/" + base_filename + "_keyframe_time_intervals.txt"
-    with open(output_file_path, "w") as f:
+    with open(output_file_path, "w", encoding="utf-8") as f:
         f.write(response.choices[0].message.content)
         print("Time interval data saved to: " + output_file_path + "\n")
 
