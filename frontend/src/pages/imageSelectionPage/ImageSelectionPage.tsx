@@ -18,8 +18,6 @@ export default function ImageSelectionPage() {
 
     return (
         <section className="image-selection">
-            <h2>Select Keyframes</h2>
-
             <KeyframeSelection
                 keyframes={[]}
                 prompt=""
