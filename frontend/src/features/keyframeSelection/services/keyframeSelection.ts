@@ -30,7 +30,8 @@ export async function extractKeyframes(uploadId: string): Promise<KeyframeRespon
 
     // If the request failed return the error
     if (!response.ok) {
-        throw new Error(`Failed to extract keyframes: HTTP ${response.status}`)
+        const error = await response.json()
+        throw new Error(error.detail || `Failed to extract keyframes: HTTP ${response.status}`)
     }
 
     return await response.json()
@@ -41,7 +42,8 @@ export async function getKeyframes(uploadId: string): Promise<KeyframeResponse> 
     const response = await fetch(`/api/keyframes/${uploadId}`)
 
     if (!response.ok) {
-        throw new Error(`Failed to get keyframes: HTTP ${response.status}`)
+        const error = await response.json()
+        throw new Error(error.detail || `Failed to get keyframes: HTTP ${response.status}`)
     }
 
     return await response.json()
@@ -59,7 +61,27 @@ export async function selectKeyframe(uploadId: string, frame: number, image: str
     })
 
     if (!response.ok) {
-        throw new Error(`Failed to select keyframe: HTTP ${response.status}`)
+        const error = await response.json()
+        throw new Error(error.detail || `Failed to select keyframe: HTTP ${response.status}`)
+    }
+
+    return await response.json()
+}
+
+// Generate nine new images between two selected images
+export async function refineKeyframe(uploadId: string, frame: number, images: string[]) {
+
+    const response = await fetch(`/api/keyframes/${uploadId}/refine`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ frame, images })
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || `Failed to refine keyframes: HTTP ${response.status}`)
     }
 
     return await response.json()
@@ -76,5 +98,6 @@ export async function finalizeKeyframes(uploadId: string) {
         const error = await response.json()
         throw new Error(error.detail || `HTTP ${response.status}`)
     }
+
     return await response.json()
 }
