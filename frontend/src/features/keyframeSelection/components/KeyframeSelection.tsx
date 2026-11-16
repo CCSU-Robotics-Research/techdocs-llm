@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Button from '../../../components/ui/Button/Button.tsx'
 import styles from './KeyframeSelection.module.css'
 
-// Information needed to display each extracted frame - from transcribe.py
+// Information needed for each extracted frame - revised to match Colin's API
 export type Keyframe = {
     id: string
     frame: number
@@ -12,57 +12,126 @@ export type Keyframe = {
     altText: string
 }
 
-// What inputs are being required from the parent page
+// Props for the KeyframeSelection component
+// This function handles uder selecting images, refining images, and confirming selection
 type KeyframeSelectionProps = {
     keyframes: Keyframe[]
-    prompt?: string
-    onConfirm: (selectedFrames: Keyframe[]) => void
+    onSelect: (frame: number, image: string) => Promise<void>
+    onRefine: (frame: number, images: string[]) => Promise<Keyframe[]>
+    onConfirm: () => Promise<void>
 }
 
-//
+// Definition of the KeyframeSelection component
 export default function KeyframeSelection({
     keyframes,
-    prompt,
+    onSelect,
+    onRefine,
     onConfirm
-
 }: KeyframeSelectionProps) {
 
-    // State to track which images are selected
-    const [selectedFrames, setSelectedFrames] = useState<string[]>([])
+    // State to track the current page of the slection process
+    const [currentIndex, setCurrentIndex] = useState(0)
 
-    // Selects or deselects an image
-    function toggleSelection(id: string) {
+    // State for selecting two images to refine multiple images and then store them
+    const [selectMultiple, setSelectMultiple] = useState(false)
+    const [refineImages, setRefineImages] = useState<Keyframe[]>([])
+    const [newImages, setNewImages] = useState<Keyframe[] | null>(null)
 
-        const clickedFrame = keyframes.find(frame => frame.id === id)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
 
-        if (!clickedFrame) return
+    // Grabs the sorted list of the keyframes and then sorts them 
+    const frameNumbers = [...new Set(keyframes.map(frame => frame.frame))]
+        .sort((a, b) => a - b)
 
-        // Check if clicked image is in the selected list - add or remove accordingly
-        setSelectedFrames(previous => {
+    const currentFrame = frameNumbers[currentIndex]
 
-            if (previous.includes(id)) {
-                return previous.filter(frame => frame !== id)
+    // Only display images for the current selection page
+    // After refining, reflects the newly generated images instead
+    const currentImages = newImages ??
+        keyframes.filter(frame => frame.frame === currentFrame)
+
+    // Prompt text is for the top of the page and is based off the alt text of the images
+    const currentPrompt = currentImages[0]?.altText ?? ''
+
+    // Handles loading and error state for any call to the backend
+    async function run(action: () => Promise<void>) {
+
+        setLoading(true)
+        setError('')
+
+        try {
+            await action()
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : 'Something went wrong'
+            )
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Select an image or choose two images for refinement
+    async function toggleSelection(frame: Keyframe) {
+
+        // Ignore clicks while a request is still running
+        if (loading) return
+
+        if (selectMultiple) {
+
+            // Add or remove the clicked image from the refine list
+            const picked = refineImages.some(image => image.id === frame.id)
+                ? refineImages.filter(image => image.id !== frame.id)
+                : [...refineImages, frame]
+
+            setRefineImages(picked)
+
+            // Two images chosen - generate new ones between them
+            if (picked.length === 2) {
+                await run(async () => {
+
+                    // Earlier image first so the backend knows the range
+                    const [first, second] = [...picked]
+                        .sort((a, b) => a.timestamp - b.timestamp)
+
+                    const refined = await onRefine(
+                        currentFrame,
+                        [first.image, second.image]
+                    )
+
+                    setNewImages(refined)
+                    setSelectMultiple(false)
+                    setRefineImages([])
+                })
             }
 
-            // Only allow one selected image per documentation frame
-            const otherFrames = previous.filter(selectedId => {
-                const selectedFrame = keyframes.find(frame => frame.id === selectedId)
-                return selectedFrame?.frame !== clickedFrame.frame
-            })
+            return
+        }
 
-            return [...otherFrames, id]
+        await run(async () => {
+
+            // Save the selected image to the backend
+            await onSelect(frame.frame, frame.image)
+
+            // Move to the next prompt
+            if (currentIndex + 1 < frameNumbers.length) {
+                setCurrentIndex(currentIndex + 1)
+                setNewImages(null)
+                setRefineImages([])
+            } else {
+                // All prompts have been completed
+                await onConfirm()
+            }
         })
     }
 
-    // Send selected images to the parent page
-    function handleConfirm() {
-
-        // This will filter the keyframes array to include the selected frames based on IDs
-        const selected = keyframes.filter(frame =>
-            selectedFrames.includes(frame.id)
-        )
-
-        onConfirm(selected)
+    // Switch between normal selection and selecting two images
+    function toggleMultiple() {
+        setSelectMultiple(previous => !previous)
+        setRefineImages([])
+        setError('')
     }
 
     // Setting up the UI for the component
@@ -72,13 +141,25 @@ export default function KeyframeSelection({
             {/* Instructions for user*/}
             <div className={styles.instructions}>
                 <p>
-                    Select one keyframe for each image in the generated documentation.
-                    Click an image to select or deselect it.
+                    1. Select the image that best represents the prompt.
+                    <br />
+                    2. If no images match, click "Select Multiple Images".
+                    <br />
+                    3. Choose two images to generate nine new images
+                    between the selected frames.
                 </p>
 
-                {prompt && (
-                    <p className={styles.prompt}>
-                        Prompt: {prompt}
+                <p>
+                    Prompt {currentIndex + 1} of {frameNumbers.length}
+                </p>
+
+                <p className={styles.prompt}>
+                    Prompt: {currentPrompt}
+                </p>
+
+                {selectMultiple && (
+                    <p>
+                        Select two images ({refineImages.length}/2)
                     </p>
                 )}
             </div>
@@ -88,16 +169,21 @@ export default function KeyframeSelection({
             <div className={styles.imageGrid}>
 
                 {/* Maps through each keyframe and creates an image card */}
-                {keyframes.length > 0 ? (
-                    keyframes.map((frame) => {
-                        const isSelected = selectedFrames.includes(frame.id)
+                {currentImages.length > 0 ? (
+                    currentImages.map((frame) => {
+
+                        const isSelected = refineImages.some(
+                            image => image.id === frame.id
+                        )
 
                         return (
                             <div
                                 key={frame.id}
+
                                 // This gives a card base and highlight styling
+                                // Makes it easier for the user to see which image is selected
                                 className={`${styles.imageCard} ${isSelected ? styles.selected : ''}`}
-                                onClick={() => toggleSelection(frame.id)}
+                                onClick={() => toggleSelection(frame)}
                             >
                                 {/* Image and alt text */}
                                 <img
@@ -112,19 +198,24 @@ export default function KeyframeSelection({
                             </div>
                         )
                     })
-                    // If there are no keyframes that were generated in the grid
                 ) : (
                     <p>No keyframes available yet.</p>
                 )}
             </div>
 
-            {/* Continue to generated document - Temporary: subject to be changed */}
+            {/* Only show text while new images are being generated */}
+            {loading && selectMultiple && <p>Generating new images</p>}
+            {error && <p>{error}</p>}
+
+            {/* Select two images if none match the prompt */}
             <div className={styles.actions}>
                 <Button
                     type="button"
-                    onClick={handleConfirm}
+                    onClick={toggleMultiple}
                 >
-                    Continue to Generated Documentation ({selectedFrames.length})
+                    {selectMultiple
+                        ? 'Cancel Multiple Selection'
+                        : 'Select Multiple Images'}
                 </Button>
             </div>
 
