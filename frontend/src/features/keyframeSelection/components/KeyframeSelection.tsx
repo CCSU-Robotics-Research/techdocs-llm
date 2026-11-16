@@ -57,17 +57,23 @@ export default function KeyframeSelection({
     // Handles loading and error state for any call to the backend
     async function run(action: () => Promise<void>) {
 
+        // Initiates loading and clears any previous error messages
         setLoading(true)
         setError('')
 
+        // Runs the the async function
         try {
             await action()
         } catch (err) {
+
+            // This error message is shown to the user if a backend call fails
             setError(
                 err instanceof Error
                     ? err.message
                     : 'Something went wrong'
             )
+
+            // Clears loading state to be ready to be used again
         } finally {
             setLoading(false)
         }
@@ -79,6 +85,9 @@ export default function KeyframeSelection({
         // Ignore clicks while a request is still running
         if (loading) return
 
+        // The case of multiple selection button
+        // It will give 9 new keyframes based off the 
+        // Two selected images 
         if (selectMultiple) {
 
             // Add or remove the clicked image from the refine list
@@ -86,16 +95,20 @@ export default function KeyframeSelection({
                 ? refineImages.filter(image => image.id !== frame.id)
                 : [...refineImages, frame]
 
+            // Refine image is then set
             setRefineImages(picked)
 
             // Two images chosen - generate new ones between them
             if (picked.length === 2) {
                 await run(async () => {
 
-                    // Earlier image first so the backend knows the range
+                    // This will sort the two images by time stamp
+                    // To know the timeframe for the new images to be generated in
                     const [first, second] = [...picked]
                         .sort((a, b) => a.timestamp - b.timestamp)
 
+                    // This will call the backend to generate new images
+                    // Between the two refined images sending time and filename
                     const refined = await onRefine(
                         currentFrame,
                         [first.image, second.image]
@@ -115,13 +128,16 @@ export default function KeyframeSelection({
             // Save the selected image to the backend
             await onSelect(frame.frame, frame.image)
 
-            // Move to the next prompt
+            // Checks to see if there are more pages remaining
+            // Sets the index, images on page, then refinement list
             if (currentIndex + 1 < frameNumbers.length) {
                 setCurrentIndex(currentIndex + 1)
                 setNewImages(null)
                 setRefineImages([])
+
+                // If there the index is larger then the frame numbers
+                // No more pages remaining - finalize selection
             } else {
-                // All prompts have been completed
                 await onConfirm()
             }
         })
