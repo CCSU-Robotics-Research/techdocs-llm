@@ -9,7 +9,7 @@ export default function ResultPage() {
 
     return (
         <section className="result">
-            <h2>Video Processing Successful!</h2>
+            <h3>Video Processing Successful!</h3>
             {/* Empty sandbox keeps any scripts in the generated HTML from running */}
             <p>Documentation and keyframes have been saved!</p>
             <Button onClick={() => navigate('/upload')}>Back to Main Page</Button>
