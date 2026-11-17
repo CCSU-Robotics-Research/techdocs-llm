@@ -1,11 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import PreviewPage from './previewPage/PreviewPage.tsx'
-import { useAppState } from '../hooks/globalHook.ts'
-import type { ProcessResult } from '../features/contextModification/components/types.ts'
+import PreviewPage from './PreviewPage.tsx'
+import { useAppState } from '../../hooks/globalHook.ts'
+import type { ProcessResult } from '../../features/contextModification/components/types.ts'
 
-vi.mock('../hooks/globalHook.ts', () => ({
+vi.mock('../../hooks/globalHook.ts', () => ({
     useAppState: vi.fn(),
 }))
 
