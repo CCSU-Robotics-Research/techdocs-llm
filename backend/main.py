@@ -1,14 +1,24 @@
 # main.py is the entry point of the program. The frontend GUI is launched from here, which then drives backend processes logged in the Terminal.
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pathlib import Path
 from uuid import uuid4
 from backend.processVideo import preliminary_video_processing
 import shutil
 import re
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from backend.transcribe import transcribe
 from backend.generatePage import generate_page
+from backend.keyframes import (
+    KeyframeError,
+    extract_keyframes,
+    get_keyframe_state,
+    select_keyframe,
+    refine_keyframe,
+    finalize_keyframes,
+    resolve_frame_image,
+    resolve_document_asset,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
@@ -167,4 +177,65 @@ def get_document(upload_id: str):
     if html_path is None:
         raise HTTPException(status_code=404, detail="Document not found.")
 
-    return FileResponse(html_path, media_type="text/html")
+    #generatePage.py writes <img src="frame_N.jpg">
+    html = html_path.read_text(encoding="utf-8")
+    base = f'<base href="/api/documents/{upload_id}/assets/">'
+    html, count = re.subn(r"<head\b[^>]*>", lambda m: f"{m.group(0)}\n{base}", html, count=1, flags=re.IGNORECASE)
+    if count == 0:
+        html = base + html
+
+    return HTMLResponse(content=html, media_type="text/html")
+
+#Serve the final selected keyframe images that the base tag points at
+@app.get("/api/documents/{upload_id}/assets/{filename}")
+def get_document_asset(upload_id: str, filename: str):
+    path = _keyframe_call(resolve_document_asset, upload_id, filename)
+    return FileResponse(path)
+
+#Keyframe selection endpoints
+class SelectFrameRequest(BaseModel):
+    frame: int = Field(..., ge=1)
+    image: str = Field(..., min_length=1, max_length=255)
+
+
+class RefineIntervalRequest(BaseModel):
+    frame: int = Field(..., ge=1)
+    images: list[str] = Field(..., min_length=2, max_length=2)
+
+#Converts the service's KeyframeError into an HTTPException, keeping the status code and detail (str or dict).
+def _keyframe_call(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except KeyframeError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    
+#Current extraction/selection state
+@app.get("/api/keyframes/{upload_id}")
+def get_keyframes(upload_id: str):
+    return _keyframe_call(get_keyframe_state, upload_id)
+
+#Runs interval discovery returns the cached state unless force=true
+@app.post("/api/keyframes/{upload_id}/extract")
+def extract_keyframes_route(upload_id: str, force: bool = False):
+    return _keyframe_call(extract_keyframes, upload_id, force)
+
+#Saves one candidate as frame_N.jpg overwriting any previous selection for that frame
+@app.post("/api/keyframes/{upload_id}/select")
+def select_keyframe_route(upload_id: str, req: SelectFrameRequest):
+    return _keyframe_call(select_keyframe, upload_id, req.frame, req.image)
+
+#Re-extracts REFINE_FRAME_COUNT candidates between two chosen candidates
+@app.post("/api/keyframes/{upload_id}/refine")
+def refine_keyframe_route(upload_id: str, req: RefineIntervalRequest):
+    return _keyframe_call(refine_keyframe, upload_id, req.frame, req.images)
+
+#Confirms every placeholder has a selected image 409 with missing_frames if not
+@app.post("/api/keyframes/{upload_id}/finalize")
+def finalize_keyframes_route(upload_id: str):
+    return _keyframe_call(finalize_keyframes, upload_id)
+
+#Serves candidate images for the selection grid
+@app.get("/api/keyframes/{upload_id}/frames/{frame}/{filename}")
+def get_keyframe_frame(upload_id: str, frame: int, filename: str):
+    path = _keyframe_call(resolve_frame_image, upload_id, frame, filename)
+    return FileResponse(path)

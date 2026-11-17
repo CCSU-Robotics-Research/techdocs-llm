@@ -3,12 +3,12 @@ import Layout from './layouts/Layout.tsx'
 import HomePage from '../src/pages/homePage/HomePage.tsx'
 import ContextPage from '../src/pages/contextPage/ContextPage.tsx'
 import PreviewPage from '../src/pages/previewPage/PreviewPage.tsx'
-//import ImageSelectionPage from './pages/ImageSelectionPage.tsx'
-//import ResultPage from './pages/ResultPage.tsx'
+import ImageSelectionPage from '../src/pages/imageSelectionPage/ImageSelectionPage.tsx'
+import ResultPage from '../src/pages/resultPage/ResultPage.tsx'
 import { AppStateProvider } from './hooks/globalHook.ts'
 
-export default function App(){
-    return(
+export default function App() {
+    return (
         <AppStateProvider>
             <BrowserRouter>
                 <Routes>
@@ -17,8 +17,8 @@ export default function App(){
                         <Route path="/upload" element={<HomePage />} />
                         <Route path="/context" element={<ContextPage />} />
                         <Route path="/preview" element={<PreviewPage />} />
-                        {/* <Route path="/image-selection" element={<ImageSelectionPage />} /> */}
-                        {/* <Route path="/result" element={<ResultPage />} /> */}
+                        <Route path="/image-selection" element={<ImageSelectionPage />} />
+                        <Route path="/result" element={<ResultPage />} />
                         <Route path="*" element={<Navigate to="/upload" replace />} />
                     </Route>
                 </Routes>
