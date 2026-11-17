@@ -8,9 +8,9 @@ export type ProcessStarted = {
     status: string
 }
 
-//Model for a finished job, used to display the generated documentation
+//Model for the generated document and whether its keyframes have been finalized.
 export type ProcessResult = {
     upload_id: string
-    status: string
+    status: 'done' | 'keyframes_finalized'
     html_file: string
 }

@@ -23,6 +23,7 @@ function renderPreviewPage(result: ProcessResult | null) {
             <Routes>
                 <Route path="/preview" element={<PreviewPage />} />
                 <Route path="/upload" element={<p>Upload page</p>} />
+                <Route path="/image-selection" element={<p>Image selection page</p>} />
             </Routes>
         </MemoryRouter>,
     )
@@ -39,10 +40,18 @@ describe('PreviewPage', () => {
         expect(screen.getByText('Upload page')).toBeTruthy()
     })
 
-    it('shows the generated document and returns to upload', () => {
-        renderPreviewPage({ upload_id: 'abc123', status: 'page ready', html_file: 'input_workdocs.html' })
+    it('redirects to image selection when the document is still a draft', () => {
+        renderPreviewPage({ upload_id: 'abc123', status: 'done', html_file: 'input_workdocs.html' })
+
+        expect(screen.getByText('Image selection page')).toBeTruthy()
+        expect(screen.queryByRole('progressbar')).toBeNull()
+    })
+
+    it('shows the finished document at 100% and returns to upload', () => {
+        renderPreviewPage({ upload_id: 'abc123', status: 'keyframes_finalized', html_file: 'input_workdocs.html' })
 
         const frame = screen.getByTitle('Generated documentation')
+        expect(screen.getByRole('progressbar').getAttribute('value')).toBe('100')
         expect(frame.getAttribute('src')).toBe('/api/documents/abc123')
         expect(frame.getAttribute('sandbox')).toBe('')
 

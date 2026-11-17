@@ -46,7 +46,7 @@ function renderContextPage() {
             <Routes>
                 <Route path="/context" element={<ContextPage />} />
                 <Route path="/upload" element={<p>Upload page</p>} />
-                <Route path="/preview" element={<p>Preview page</p>} />
+                <Route path="/image-selection" element={<p>Image selection page</p>} />
             </Routes>
         </MemoryRouter>,
     )
@@ -110,19 +110,19 @@ describe('ContextPage', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Process Video' }))
 
-        expect(await screen.findByText('Transcribing audio… (50%)')).toBeTruthy()
+        expect(await screen.findByText('Transcribing audio and drafting instructions… (50%)')).toBeTruthy()
         expect(screen.getByRole('progressbar').getAttribute('value')).toBe('50')
         expect(vi.mocked(useJobProgress)).toHaveBeenLastCalledWith(uploadId)
         expect(screen.getByRole('button', { name: 'Processing...' }).hasAttribute('disabled')).toBe(true)
     })
 
-    it('goes to the preview page when processing is done', async () => {
+    it('goes to image selection when processing is done', async () => {
         mockJobProgress({ upload_id: uploadId, stage: 'done', progress: 100, html_file: 'input_workdocs.html' })
         renderContextPage()
 
         fireEvent.click(screen.getByRole('button', { name: 'Process Video' }))
 
-        expect(await screen.findByText('Preview page')).toBeTruthy()
+        expect(await screen.findByText('Image selection page')).toBeTruthy()
         expect(mockSetResult).toHaveBeenCalledWith({ upload_id: uploadId, status: 'done', html_file: 'input_workdocs.html' })
         expect(mockHandleSubmit).toHaveBeenCalledOnce()
     })

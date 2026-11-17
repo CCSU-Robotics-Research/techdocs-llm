@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAppState } from '../../hooks/globalHook.ts'
+import { KEYFRAME_PROGRESS, STAGE_LABELS } from '../../features/progressStages/components/constants.ts'
+import ProgressBar from '../../features/progressStages/components/progressBar/ProgressBar.tsx'
 import KeyframeSelection, {
     type Keyframe
 } from '../../features/keyframeSelection/components/KeyframeSelection.tsx'
@@ -19,7 +21,7 @@ import {
 // Component which handles the user selecting of keyframes
 export default function ImageSelectionPage() {
     const navigate = useNavigate()
-    const { result } = useAppState()
+    const { result, setResult } = useAppState()
 
     // Store the state variables for images, laoding, and error statees
     const [keyframes, setKeyframes] = useState<Keyframe[]>([])
@@ -95,17 +97,23 @@ export default function ImageSelectionPage() {
         return updated.filter(image => image.frame === frame)
     }
 
-    // Finish selecting images -> go to results page
+    // Open the finished document after the image selections are finalized.
     async function handleConfirm() {
-        await finalizeKeyframes(result!.upload_id)
-        navigate('/result')
+        if (!result) return
+        await finalizeKeyframes(result.upload_id)
+        setResult({ ...result, status: 'keyframes_finalized' })
+        navigate('/preview')
     }
 
     return (
         <section className="image-selection">
 
-            {/* Display loading message while keyframes are extracted - To be removed once progress is implemented */}
-            {loading && <p>Place Holder for progress Bar</p>}
+            {!error && (
+                <ProgressBar
+                    label={loading ? STAGE_LABELS.done : 'Select an image for each prompt'}
+                    progress={loading ? KEYFRAME_PROGRESS.extracting : KEYFRAME_PROGRESS.selecting}
+                />
+            )}
 
             {/* Display error if extraction fails */}
             {error && <p>{error}</p>}

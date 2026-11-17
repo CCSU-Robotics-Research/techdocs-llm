@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import FeatureComponent from '../../features/contextModification/components/ContextForm.tsx'
 import { useContextModification } from '../../features/contextModification/hooks/useContextForm.ts'
 import ProgressBar from '../../features/progressStages/components/progressBar/ProgressBar.tsx'
-import { STAGE_LABELS } from '../../features/progressStages/components/constants.ts'
+import { STAGE_LABELS, STAGE_PROGRESS } from '../../features/progressStages/components/constants.ts'
 import { useJobProgress } from '../../features/progressStages/hooks/useJobProgress.ts'
 import { useAppState } from '../../hooks/globalHook.ts'
 
@@ -14,11 +14,11 @@ export default function ContextPage(){
     const [uploadId, setUploadId] = useState<string | null>(null)
     const { job, errorMessage: progressError } = useJobProgress(uploadId)
 
-    //Open the preview once the backend reports the documentation is ready.
+    //Open image selection once the backend reports the draft is ready.
     useEffect(() => {
         if (job?.stage === 'done' && job.html_file) {
             setResult({ upload_id: job.upload_id, status: job.stage, html_file: job.html_file })
-            navigate('/preview')
+            navigate('/image-selection')
         }
     }, [job, setResult, navigate])
 
@@ -48,7 +48,7 @@ export default function ContextPage(){
             {showProgress && (
                 <ProgressBar
                     label={job ? STAGE_LABELS[job.stage] : 'Uploading video…'}
-                    progress={job?.progress ?? 0}
+                    progress={job ? STAGE_PROGRESS[job.stage] : 0}
                 />
             )}
         </>
