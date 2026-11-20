@@ -1,6 +1,6 @@
 # main.py is the entry point of the program. The frontend GUI is launched from here, which then drives backend processes logged in the Terminal.
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from pathlib import Path
 from uuid import uuid4
 from typing import Literal
@@ -20,6 +20,7 @@ from backend.keyframes import (
     resolve_frame_image,
     resolve_document_asset,
 )
+from backend.docExport import html_export
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
@@ -206,11 +207,51 @@ def get_document(upload_id: str, theme: Literal["light", "dark"] = "light"):
 
     return HTMLResponse(content=html, media_type="text/html")
 
+#Compress the generated HTML and keyframe images into a zip file for download.
+@app.get(
+    "/api/documents/{upload_id}/download",
+    response_class=Response,
+    responses={200: {"content": {"application/zip": {}}}},
+)
+
+def download_document(upload_id: str, format: Literal["html"] = "html"):
+    _keyframe_call(finalize_keyframes, upload_id) 
+
+    output_dir = JOBS_DIR / upload_id / "output"
+
+    #Package completed document without creating a temporary file or processing on disk, which can cause a popup in some browsers.
+    try:
+        zip_bytes = html_export(output_dir)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Document or selected keyframe file not found.",
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=409,
+            detail="The document output is not ready for export.",
+        )
+
+    #Send the ZIP as a downloadable attachment
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="documentation-{upload_id}.zip"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
 #Serve the final selected keyframe images that the base tag points at
 @app.get("/api/documents/{upload_id}/assets/{filename}")
 def get_document_asset(upload_id: str, filename: str):
     path = _keyframe_call(resolve_document_asset, upload_id, filename)
     return FileResponse(path)
+
+
 
 #Keyframe selection endpoints
 class SelectFrameRequest(BaseModel):
