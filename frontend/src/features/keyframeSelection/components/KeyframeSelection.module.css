@@ -14,7 +14,7 @@
     margin-bottom: 24px;
     font-size: 16px;
     line-height: 1.5;
-    color: #333;
+    color: var(--text);
 }
 
 .prompt {
@@ -34,7 +34,7 @@
     overflow: hidden;
     border: 3px solid transparent;
     border-radius: 6px;
-    background: #fff;
+    background: var(--surface);
     cursor: pointer;
     transition: border-color 0.15s ease;
 }
@@ -44,7 +44,7 @@
 }
 
 .imageCard.selected {
-    border-color: var(--blue);
+    border-color: var(--selection);
 }
 
 .imageCard img {
@@ -57,8 +57,8 @@
 .timestamp {
     padding: 8px;
     font-size: 14px;
-    color: #333;
-    background: #fff;
+    color: var(--text);
+    background: var(--surface);
 }
 
 .checkmark {

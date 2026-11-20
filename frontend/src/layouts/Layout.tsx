@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom'
+import ThemeToggle from '../components/ui/ThemeToggle/ThemeToggle'
 // import logo from '../assets/images/CCSU-LOGO.png'
+
 
 export default function Layout(){
     return(
@@ -8,6 +10,8 @@ export default function Layout(){
                 {/* <img src={logo} width="200" alt="CCSU Robotics Research" className="layout__logo" /> */}
                 {/* if we want to reinclude the img */}
                 <h1>Video to Instruction Manual</h1>
+                {/*Switch the page between light and dark mode*/}
+                <ThemeToggle />
             </header>
             <main className="layout__main">
                 <Outlet />

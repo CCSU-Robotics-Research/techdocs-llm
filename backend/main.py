@@ -3,6 +3,7 @@ from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadF
 from fastapi.responses import FileResponse, HTMLResponse
 from pathlib import Path
 from uuid import uuid4
+from typing import Literal
 from backend.processVideo import preliminary_video_processing
 import shutil
 import re
@@ -170,7 +171,7 @@ def get_job_status(upload_id: str):
 
 #Serve the generated HTML page for an upload so the frontend can display it.
 @app.get("/api/documents/{upload_id}")
-def get_document(upload_id: str):
+def get_document(upload_id: str, theme: Literal["light", "dark"] = "light"):
     if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
         raise HTTPException(status_code=400, detail="Invalid upload_id.")
     html_path = next((JOBS_DIR / upload_id / "output").glob("*.html"), None)
@@ -183,6 +184,25 @@ def get_document(upload_id: str):
     html, count = re.subn(r"<head\b[^>]*>", lambda m: f"{m.group(0)}\n{base}", html, count=1, flags=re.IGNORECASE)
     if count == 0:
         html = base + html
+
+    #Apply dark colors to the preview response without changing the saved document
+    if theme == "dark":
+        preview_style = """<style>
+            html { color-scheme: dark; background-color: #151922; }
+            html body { background-color: #151922; color: #edf0f5; }
+            html h1, html h2, html h3, html h4, html h5, html h6,
+            html h1.title, html a { color: #91c5ff; }
+            html pre, html code, html blockquote, html th {
+                background-color: #222936;
+                color: #edf0f5;
+            }
+            html table, html th, html td, html blockquote, html hr {
+                border-color: #657186;
+            }
+        </style>"""
+        html, count = re.subn(r"</head\s*>", lambda m: f"{preview_style}\n{m.group(0)}", html, count=1, flags=re.IGNORECASE)
+        if count == 0:
+            html = preview_style + html
 
     return HTMLResponse(content=html, media_type="text/html")
 

@@ -30,3 +30,12 @@
 .unavailable .dot {
     background-color: #b91c1c;
 }
+
+/*Keep the status lights visible against the dark background*/
+:global(:root[data-theme='dark']) .connected .dot {
+    background-color: #4ade80;
+}
+
+:global(:root[data-theme='dark']) .unavailable .dot {
+    background-color: var(--error);
+}

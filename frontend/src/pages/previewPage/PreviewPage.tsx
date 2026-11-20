@@ -6,7 +6,7 @@ import { useAppState } from '../../hooks/globalHook.ts'
 
 export default function PreviewPage(){
     const navigate = useNavigate()
-    const { result } = useAppState()
+    const { result, theme } = useAppState()
     if (!result) return <Navigate to="/upload" replace />
     if (result.status !== 'keyframes_finalized') return <Navigate to="/image-selection" replace />
 
@@ -19,7 +19,7 @@ export default function PreviewPage(){
                 className="preview__document"
                 title="Generated documentation"
                 sandbox=""
-                src={`/api/documents/${result.upload_id}`}
+                src={`/api/documents/${result.upload_id}?theme=${theme}`}
             />
             <Button onClick={() => navigate('/upload')}>Process Another Video</Button>
         </section>

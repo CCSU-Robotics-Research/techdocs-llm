@@ -60,6 +60,8 @@ describe('ContextPage', () => {
     beforeEach(() => {
         vi.clearAllMocks()
         vi.mocked(useAppState).mockReturnValue({
+            theme: 'light',
+            setTheme: () => undefined,
             video: new File(['video'], 'demo.mp4', { type: 'video/mp4' }),
             context: '',
             result: null,
@@ -82,6 +84,8 @@ describe('ContextPage', () => {
 
     it('redirects to upload when no video is selected', () => {
         vi.mocked(useAppState).mockReturnValue({
+            theme: 'light',
+            setTheme: () => undefined,
             video: null,
             context: '',
             result: null,

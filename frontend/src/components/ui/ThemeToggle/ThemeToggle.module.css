@@ -1,0 +1,19 @@
+.toggle {
+    padding: 6px 12px;
+    border: 1px solid currentColor;
+    border-radius: 16px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.toggle[aria-pressed='true'] {
+    background: rgb(255 255 255 / 15%);
+}
+
+.toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}

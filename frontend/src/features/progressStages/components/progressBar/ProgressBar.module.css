@@ -13,10 +13,10 @@
     border: 0;
     border-radius: 7px;
     overflow: hidden;
-    background: #dcdce6;
+    background: var(--progress-track);
 }
 .bar::-webkit-progress-bar {
-    background: #dcdce6;
+    background: var(--progress-track);
 }
 .bar::-webkit-progress-value {
     background: var(--blue);

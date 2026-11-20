@@ -1,11 +1,36 @@
 :root {
     --blue: #1e5a9c;
     --bg: #f4f4fa;
+    /*Shared colors used throughout the pages*/
+    --surface: #fff;
+    --text: #333;
+    --muted: #666;
+    --border: #aaa;
+    --heading: blue;
+    --error: #c00;
+    --drop-border: #e8e8e8;
+    --progress-track: #dcdce6;
+    --selection: #1e5a9c;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 32px;
-    color: #333;
+    color: var(--text);
     background: var(--bg);
     color-scheme: light;
+}
+
+/*Override the shared colors when dark mode is selected*/
+:root[data-theme='dark'] {
+    --bg: #151922;
+    --surface: #222936;
+    --text: #edf0f5;
+    --muted: #b5becd;
+    --border: #657186;
+    --heading: #91c5ff;
+    --error: #ff9b9b;
+    --drop-border: #485365;
+    --progress-track: #485365;
+    --selection: #91c5ff;
+    color-scheme: dark;
 }
 
 body{
@@ -23,7 +48,12 @@ body{
 .layout__header{
     background: var(--blue);
     color: #fff;
-    padding: 8px 0;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 .layout__header h1{
     margin: 0;
@@ -40,7 +70,7 @@ body{
 .layout__footer { 
     padding: 8px; 
     font-size: 10px; 
-    color: #999; 
+    color: var(--muted);
 }
 
 /*context page*/
@@ -48,13 +78,13 @@ body{
     margin: 6px 0 24px; 
     font-size: 20px; 
     font-weight: 700; 
-    color: blue; 
+    color: var(--heading);
 }
 .context__meta { 
     margin-bottom: 20px; 
     font-size: 16px; 
     line-height: 1.2; 
-    color: #333; 
+    color: var(--text);
 }
 .context__meta strong { 
     font-weight: 400; 
@@ -83,12 +113,12 @@ body{
   padding: 1px 2px; 
   font: 16px Arial, sans-serif; 
   text-align: left;
-  border: 1px solid #aaa; 
-  background: #fff; 
-  color: #000;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 .input-error { 
-    color: #c00; 
+    color: var(--error);
     font-size: 16px; 
 }
 
@@ -102,7 +132,7 @@ body{
   padding: 0 10px;
   border: 0;
   border-radius: 17px; 
-  background: var(--blue); 
+  background: var(--blue);
   color: #fff;
   font: 700 11px Arial, sans-serif; 
   cursor: pointer;
@@ -119,13 +149,13 @@ body{
     margin: 6px 0 16px;
     font-size: 20px;
     font-weight: 700;
-    color: blue;
+    color: var(--heading);
 }
 .preview__document {
     display: block;
     width: min(100%, 1000px);
     height: 70vh;
     margin: 0 auto 14px;
-    border: 1px solid #aaa;
+    border: 1px solid var(--border);
     background: #fff;
 }

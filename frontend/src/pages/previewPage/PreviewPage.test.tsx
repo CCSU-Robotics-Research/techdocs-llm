@@ -9,8 +9,10 @@ vi.mock('../../hooks/globalHook.ts', () => ({
     useAppState: vi.fn(),
 }))
 
-function renderPreviewPage(result: ProcessResult | null) {
+function renderPreviewPage(result: ProcessResult | null, theme: 'light' | 'dark' = 'light') {
     vi.mocked(useAppState).mockReturnValue({
+        theme,
+        setTheme: () => undefined,
         video: null,
         context: '',
         result,
@@ -47,12 +49,20 @@ describe('PreviewPage', () => {
         expect(screen.queryByRole('progressbar')).toBeNull()
     })
 
+    it('requests a dark preview when dark mode is selected', () => {
+        renderPreviewPage({ upload_id: 'abc123', status: 'keyframes_finalized', html_file: 'input_workdocs.html' }, 'dark')
+
+        const frame = screen.getByTitle('Generated documentation')
+        expect(frame.getAttribute('src')).toBe('/api/documents/abc123?theme=dark')
+        expect(frame.getAttribute('sandbox')).toBe('')
+    })
+
     it('shows the finished document at 100% and returns to upload', () => {
         renderPreviewPage({ upload_id: 'abc123', status: 'keyframes_finalized', html_file: 'input_workdocs.html' })
 
         const frame = screen.getByTitle('Generated documentation')
         expect(screen.getByRole('progressbar').getAttribute('value')).toBe('100')
-        expect(frame.getAttribute('src')).toBe('/api/documents/abc123')
+        expect(frame.getAttribute('src')).toBe('/api/documents/abc123?theme=light')
         expect(frame.getAttribute('sandbox')).toBe('')
 
         fireEvent.click(screen.getByRole('button', { name: 'Process Another Video' }))
