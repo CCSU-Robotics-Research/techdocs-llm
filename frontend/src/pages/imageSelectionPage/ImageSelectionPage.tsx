@@ -102,7 +102,7 @@ export default function ImageSelectionPage() {
         if (!result) return
         await finalizeKeyframes(result.upload_id)
         setResult({ ...result, status: 'keyframes_finalized' })
-        navigate('/preview')
+        navigate('/document-editor')
     }
 
     return (
