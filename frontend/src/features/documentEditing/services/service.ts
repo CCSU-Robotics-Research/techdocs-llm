@@ -11,3 +11,20 @@ export async function getDocument(uploadId: string): Promise<string> {
 
     return await response.text()
 }
+
+// This is able to store the edited changes - need to create endpoint in main.py
+export async function saveDocument(uploadId: string, html: string) {
+    const response = await fetch(`/api/documents/${uploadId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'text/html'
+        },
+        body: html
+    })
+
+    if (!response.ok) {
+        throw new Error(`Failed to save document: HTTP ${response.status}`)
+    }
+
+    return await response.json()
+}
