@@ -1,9 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
 import Button from '../../../components/ui/Button/Button.tsx'
 import { useAppState } from '../../../hooks/globalHook.ts'
-import { getDocument } from '../services/service.ts'
+import { getDocument, saveDocument } from '../services/service.ts'
 
 export default function DocumentEditor() {
     const { result } = useAppState()
@@ -11,17 +10,17 @@ export default function DocumentEditor() {
     // State to store the generated document
     const [documentHtml, setDocumentHtml] = useState('')
 
-    // State to track editing and reloading the document
+    // State to track if the document is being edited
     const [editing, setEditing] = useState(false)
-    const [version, setVersion] = useState(0)
 
     const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
 
     // Reference to the iframe
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
-    // Retrieve the gnerated document from the backend
+    // Retrieve the generated document from the backend
     useEffect(() => {
         if (!result) return
 
@@ -55,6 +54,7 @@ export default function DocumentEditor() {
 
     // Nothing to display if no video was uploaded
     if (!result) return <p>No document available. Please upload a video first.</p>
+
     // Enable or disable editing inside the iframe
     // Used the contentEditable property to allow the user to edit the document
     function setEditable(value: boolean) {
@@ -76,41 +76,54 @@ export default function DocumentEditor() {
         setEditing(true)
     }
 
-    // Keep the edited document once thet are done with editing
-    // Do not send the updated document to the backend yet, just store it in state
-    // Will have to send it to the backend when the user confirms the document is ready to be finalized 
-    function handleSave() {
+    // Save the edited document to the backend
+    async function handleSave() {
         const doc = iframeRef.current?.contentDocument
 
-        if (!doc?.body) return
+        if (!doc?.body || !result) return
 
-        setEditable(false)
+        // Get the updated HTML
+        const html = '<!DOCTYPE html>' + doc.documentElement.outerHTML
 
-        // Store the updated HTML
-        setDocumentHtml('<!DOCTYPE html>' + doc.documentElement.outerHTML)
-        setEditing(false)
+        setSaving(true)
+        setError('')
+
+        try {
+            // Send the edited document to FastAPI
+            await saveDocument(result.upload_id, html)
+
+            // Keep the updated document
+            setDocumentHtml(html)
+            setEditable(false)
+            setEditing(false)
+
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to save document')
+        } finally {
+            setSaving(false)
+        }
     }
 
-    // Cancel editing and reload the previous document
-    function handleCancel() {
-        setEditing(false)
-        setVersion(previous => previous + 1)
+    // Open the saved document in a new tab
+    function handlePreview() {
+        if (!result) return
+
+        window.open(`/api/documents/${result.upload_id}`, '_blank')
     }
 
     return (
         <div className="document-editor">
 
-            {/* Display loading message while retrieving the document just for testing*/}
+            {/* Display loading message while retrieving the document */}
             {loading && <p>Loading document...</p>}
 
             {/* Display error if the document cannot be loaded */}
             {error && <p>{error}</p>}
 
-            {/* Displays the generated document */}
+            {/* Display the generated document */}
             {!loading && !error && (
                 <>
                     <iframe
-                        key={version}
                         ref={iframeRef}
                         className="preview__document"
                         title="Generated documentation"
@@ -119,23 +132,23 @@ export default function DocumentEditor() {
                         onLoad={handleLoad}
                     />
 
-                    {/* Buttons for editing the document - Might remove just to keep the interface simple */}
+                    {/* Buttons for editing the document */}
                     <div className="document-editor__actions">
 
                         {!editing ? (
-                            <Button onClick={handleEdit}>
-                                Edit Document
-                            </Button>
-                        ) : (
                             <>
-                                <Button onClick={handleSave}>
-                                    Done Editing
+                                <Button onClick={handleEdit}>
+                                    Edit Document
                                 </Button>
 
-                                <Button onClick={handleCancel}>
-                                    Cancel
+                                <Button onClick={handlePreview}>
+                                    View Saved Document
                                 </Button>
                             </>
+                        ) : (
+                            <Button onClick={handleSave} disabled={saving}>
+                                {saving ? 'Saving...' : 'Done Editing'}
+                            </Button>
                         )}
 
                     </div>
