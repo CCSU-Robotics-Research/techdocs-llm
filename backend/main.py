@@ -23,6 +23,10 @@ from backend.keyframes import (
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
 
+#The user's edits are saved in the job folder instead of over the generated page in output/, so the original is never lost.
+#Keyframe selection keeps reading the original from output/.
+EDITED_DOCUMENT_NAME = "edited_document.html"
+
 #Percent complete at the start of each processing stage, used by the frontend progress bar.
 JOB_STAGES = {
     "uploaded": 10,
@@ -111,6 +115,8 @@ def generate(req: GenerateRequest):
     #Transcribe the audio, then generate the page from the transcript.
     markdown_path, _ = transcribe(str(audio), req.context)
     html_path, out_dir = generate_page(markdown_path, output_dir=job_dir / "output")
+    #Edits made to the previous page no longer match the newly generated one.
+    (job_dir / EDITED_DOCUMENT_NAME).unlink(missing_ok=True)
 
     return {"upload_id": req.upload_id, "status":"page ready", "html_file": Path(html_path).name}
 
@@ -168,7 +174,7 @@ def get_job_status(upload_id: str):
 
     return job
 
-#Serve the generated HTML page for an upload so the frontend can display it.
+#Serve the HTML page for an upload so the frontend can display it, showing the user's saved edits if there are any.
 @app.get("/api/documents/{upload_id}")
 def get_document(upload_id: str):
     if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
@@ -176,6 +182,9 @@ def get_document(upload_id: str):
     html_path = next((JOBS_DIR / upload_id / "output").glob("*.html"), None)
     if html_path is None:
         raise HTTPException(status_code=404, detail="Document not found.")
+    edited_path = JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME
+    if edited_path.is_file():
+        html_path = edited_path
 
     #generatePage.py writes <img src="frame_N.jpg">
     html = html_path.read_text(encoding="utf-8")
@@ -263,5 +272,6 @@ async def save_document(upload_id: str, request: Request):
         flags=re.IGNORECASE,
     )
 
-    html_path.write_text(html, encoding="utf-8")
+    #Save beside the generated page so the original in output/ is kept
+    (JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME).write_text(html, encoding="utf-8")
     return {"status": "saved"}
