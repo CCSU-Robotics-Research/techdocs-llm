@@ -86,8 +86,11 @@ export default function DocumentEditor() {
 
         if (!doc?.body || !result) return
 
-        // Get the updated HTML
-        const html = '<!DOCTYPE html>' + doc.documentElement.outerHTML
+        // Get the updated HTML from a copy of the page without contentEditable, so the saved document is not editable
+        // The copy keeps the page on screen editable in case the save fails
+        const page = doc.documentElement.cloneNode(true) as HTMLElement
+        page.querySelector('body')?.removeAttribute('contenteditable')
+        const html = '<!DOCTYPE html>' + page.outerHTML
 
         setSaving(true)
         setSaveError('')
