@@ -11,3 +11,4 @@ audioop-lts
 fastapi
 uvicorn
 python-multipart
+nh3

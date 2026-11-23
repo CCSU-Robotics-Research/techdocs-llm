@@ -6,6 +6,7 @@ from uuid import uuid4
 from backend.processVideo import preliminary_video_processing
 import shutil
 import re
+import nh3
 from pydantic import BaseModel, Field
 from backend.transcribe import transcribe
 from backend.generatePage import generate_page
@@ -26,6 +27,20 @@ JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
 #The user's edits are saved in the job folder instead of over the generated page in output/, so the original is never lost.
 #Keyframe selection keeps reading the original from output/.
 EDITED_DOCUMENT_NAME = "edited_document.html"
+
+#Attributes allowed in saved edits on top of the nh3 defaults: the page's own classes and the inline styles on images.
+DOCUMENT_ATTRIBUTES = {tag: set(attributes) for tag, attributes in nh3.ALLOWED_ATTRIBUTES.items()}
+for tag, attribute in (("div", "class"), ("h1", "class"), ("code", "class"), ("img", "style"), ("span", "style")):
+    DOCUMENT_ATTRIBUTES.setdefault(tag, set()).add(attribute)
+
+#Style properties kept inside those style attributes. Anything else, such as position, is removed.
+DOCUMENT_STYLES = {
+    "max-height", "width", "border", "border-radius", "margin", "display",
+    "font-weight", "font-style", "text-decoration", "text-decoration-line",
+}
+
+#Scripts are never needed in a document, so the browser is told not to run any, even when the page is opened directly.
+DOCUMENT_SECURITY_HEADERS = {"Content-Security-Policy": "script-src 'none'; object-src 'none'"}
 
 #Percent complete at the start of each processing stage, used by the frontend progress bar.
 JOB_STAGES = {
@@ -193,7 +208,7 @@ def get_document(upload_id: str):
     if count == 0:
         html = base + html
 
-    return HTMLResponse(content=html, media_type="text/html")
+    return HTMLResponse(content=html, media_type="text/html", headers=DOCUMENT_SECURITY_HEADERS)
 
 #Serve the final selected keyframe images that the base tag points at
 @app.get("/api/documents/{upload_id}/assets/{filename}")
@@ -250,6 +265,18 @@ def get_keyframe_frame(upload_id: str, frame: int, filename: str):
     return FileResponse(path)
 
 
+#Return where the contents of an HTML page's body start and end, or None if it has no body.
+def find_body(html: str):
+    body = re.search(r"<body\b[^>]*>", html, flags=re.IGNORECASE)
+    end = html.lower().rfind("</body>")
+    if body is None or end < body.end():
+        return None
+
+    return body.end(), end
+
+#Save the user's edits to the document.
+#Only the edited body is kept, with anything that could run code removed. It is placed inside the generated page,
+#so the head, styles, and body tag always come from the original and cannot be changed by the request.
 @app.put("/api/documents/{upload_id}")
 async def save_document(upload_id: str, request: Request):
     if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
@@ -261,17 +288,21 @@ async def save_document(upload_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Document not found.")
 
     html = (await request.body()).decode("utf-8")
-    if not html.strip():
+
+    #Keep only the edited body. The base tag added for displaying images is in the head, so it is left behind too.
+    edited_body = find_body(html)
+    body = html[edited_body[0]:edited_body[1]] if edited_body else html
+    body = nh3.clean(body, attributes=DOCUMENT_ATTRIBUTES, filter_style_properties=DOCUMENT_STYLES).strip()
+    if not body:
         raise HTTPException(status_code=400, detail="Document cannot be empty.")
 
-    # Remove the base tag added for displaying images in the browser
-    html = re.sub(
-        rf'<base\s+href=["\']/api/documents/{upload_id}/assets/["\']\s*/?>',
-        '',
-        html,
-        flags=re.IGNORECASE,
-    )
+    #Put the cleaned body inside the generated page in place of its original body
+    original = html_path.read_text(encoding="utf-8")
+    original_body = find_body(original)
+    page = body
+    if original_body:
+        page = original[:original_body[0]] + "\n" + body + "\n" + original[original_body[1]:]
 
     #Save beside the generated page so the original in output/ is kept
-    (JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME).write_text(html, encoding="utf-8")
+    (JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME).write_text(page, encoding="utf-8")
     return {"status": "saved"}
