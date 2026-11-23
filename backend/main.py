@@ -1,5 +1,5 @@
 # main.py is the entry point of the program. The frontend GUI is launched from here, which then drives backend processes logged in the Terminal.
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from pathlib import Path
 from uuid import uuid4
@@ -239,3 +239,29 @@ def finalize_keyframes_route(upload_id: str):
 def get_keyframe_frame(upload_id: str, frame: int, filename: str):
     path = _keyframe_call(resolve_frame_image, upload_id, frame, filename)
     return FileResponse(path)
+
+
+@app.put("/api/documents/{upload_id}")
+async def save_document(upload_id: str, request: Request):
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(status_code=400, detail="Invalid upload_id.")
+
+    output_dir = JOBS_DIR / upload_id / "output"
+    html_path = next(iter(sorted(output_dir.glob("*.html"))), None)
+    if html_path is None:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    html = (await request.body()).decode("utf-8")
+    if not html.strip():
+        raise HTTPException(status_code=400, detail="Document cannot be empty.")
+
+    # Remove the base tag added for displaying images in the browser
+    html = re.sub(
+        rf'<base\s+href=["\']/api/documents/{upload_id}/assets/["\']\s*/?>',
+        '',
+        html,
+        flags=re.IGNORECASE,
+    )
+
+    html_path.write_text(html, encoding="utf-8")
+    return {"status": "saved"}
