@@ -17,6 +17,9 @@ export default function DocumentEditor() {
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
 
+    // Kept separate from the loading error so a failed save does not hide the document and lose the edits
+    const [saveError, setSaveError] = useState('')
+
     // Reference to the iframe
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -74,6 +77,7 @@ export default function DocumentEditor() {
     function handleEdit() {
         setEditable(true)
         setEditing(true)
+        setSaveError('')
     }
 
     // Save the edited document to the backend
@@ -86,7 +90,7 @@ export default function DocumentEditor() {
         const html = '<!DOCTYPE html>' + doc.documentElement.outerHTML
 
         setSaving(true)
-        setError('')
+        setSaveError('')
 
         try {
             // Send the edited document to FastAPI
@@ -98,7 +102,8 @@ export default function DocumentEditor() {
             setEditing(false)
 
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'Failed to save document')
+            // Keep the document and edits on screen so the user can try saving again
+            setSaveError(error instanceof Error ? error.message : 'Failed to save document')
         } finally {
             setSaving(false)
         }
@@ -131,6 +136,9 @@ export default function DocumentEditor() {
                         srcDoc={documentHtml}
                         onLoad={handleLoad}
                     />
+
+                    {/* Display error if the document cannot be saved */}
+                    {saveError && <p role="alert">{saveError}</p>}
 
                     {/* Buttons for editing the document */}
                     <div className="document-editor__actions">
