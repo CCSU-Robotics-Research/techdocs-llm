@@ -12,8 +12,9 @@ export async function getDocument(uploadId: string): Promise<string> {
     return await response.text()
 }
 
-// This is able to store the edited changes - need to create endpoint in main.py
-export async function saveDocument(uploadId: string, html: string) {
+// Store the edited changes and return the saved document
+// The backend removes anything unsafe, so the returned HTML can differ from what was sent
+export async function saveDocument(uploadId: string, html: string): Promise<string> {
     const response = await fetch(`/api/documents/${uploadId}`, {
         method: 'PUT',
         headers: {
@@ -26,5 +27,5 @@ export async function saveDocument(uploadId: string, html: string) {
         throw new Error(`Failed to save document: HTTP ${response.status}`)
     }
 
-    return await response.json()
+    return await response.text()
 }

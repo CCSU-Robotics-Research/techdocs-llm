@@ -129,3 +129,22 @@ body{
     border: 1px solid #aaa;
     background: #fff;
 }
+
+/*document editor page*/
+.document-editor-page h2 {
+    margin: 6px 0 16px;
+    font-size: 20px;
+    font-weight: 700;
+    color: blue;
+}
+.document-editor [role="alert"] {
+    margin: 0 0 14px;
+    color: #c00;
+    font-size: 16px;
+}
+.document-editor__actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}

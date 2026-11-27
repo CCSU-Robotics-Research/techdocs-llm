@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "vitest run src/pages/contextPage/ContextPage.test.tsx src/pages/previewPage/PreviewPage.test.tsx src/features/progressStages",
+    "test": "vitest run src/pages/contextPage/ContextPage.test.tsx src/pages/previewPage/PreviewPage.test.tsx src/features/progressStages src/features/documentEditing src/pages/documentEditingPage",
     "preview": "vite preview"
   },
   "dependencies": {

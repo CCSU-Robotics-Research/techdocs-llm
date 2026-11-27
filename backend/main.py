@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from pathlib import Path
 from uuid import uuid4
 from backend.processVideo import preliminary_video_processing
+import os
 import shutil
 import re
 import nh3
@@ -27,6 +28,9 @@ JOBS_DIR = PROJECT_ROOT / "temp" / "jobs"
 #The user's edits are saved in the job folder instead of over the generated page in output/, so the original is never lost.
 #Keyframe selection keeps reading the original from output/.
 EDITED_DOCUMENT_NAME = "edited_document.html"
+
+#Largest document that can be saved, in bytes. Generated documents are a few kilobytes, so this leaves plenty of room.
+MAX_DOCUMENT_BYTES = 5_000_000
 
 #Attributes allowed in saved edits on top of the nh3 defaults: the page's own classes and the inline styles on images.
 DOCUMENT_ATTRIBUTES = {tag: set(attributes) for tag, attributes in nh3.ALLOWED_ATTRIBUTES.items()}
@@ -189,14 +193,21 @@ def get_job_status(upload_id: str):
 
     return job
 
+#Find the generated HTML page for an upload, raising an HTTPException if it does not exist.
+#Sorted the same way as keyframes.py so every route uses the same file.
+def find_document(upload_id: str) -> Path:
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(status_code=400, detail="Invalid upload_id.")
+    html_path = next(iter(sorted((JOBS_DIR / upload_id / "output").glob("*.html"))), None)
+    if html_path is None:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    return html_path
+
 #Serve the HTML page for an upload so the frontend can display it, showing the user's saved edits if there are any.
 @app.get("/api/documents/{upload_id}")
 def get_document(upload_id: str):
-    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
-        raise HTTPException(status_code=400, detail="Invalid upload_id.")
-    html_path = next((JOBS_DIR / upload_id / "output").glob("*.html"), None)
-    if html_path is None:
-        raise HTTPException(status_code=404, detail="Document not found.")
+    html_path = find_document(upload_id)
     edited_path = JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME
     if edited_path.is_file():
         html_path = edited_path
@@ -274,20 +285,23 @@ def find_body(html: str):
 
     return body.end(), end
 
-#Save the user's edits to the document.
+#Save the user's edits to the document and return the saved page, so the editor shows exactly what was kept.
 #Only the edited body is kept, with anything that could run code removed. It is placed inside the generated page,
 #so the head, styles, and body tag always come from the original and cannot be changed by the request.
 @app.put("/api/documents/{upload_id}")
 async def save_document(upload_id: str, request: Request):
-    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
-        raise HTTPException(status_code=400, detail="Invalid upload_id.")
+    html_path = find_document(upload_id)
 
-    output_dir = JOBS_DIR / upload_id / "output"
-    html_path = next(iter(sorted(output_dir.glob("*.html"))), None)
-    if html_path is None:
-        raise HTTPException(status_code=404, detail="Document not found.")
-
-    html = (await request.body()).decode("utf-8")
+    #Error Handling: Reject documents that are too large or not valid text
+    if int(request.headers.get("content-length") or 0) > MAX_DOCUMENT_BYTES:
+        raise HTTPException(status_code=413, detail="Document is too large.")
+    raw = await request.body()
+    if len(raw) > MAX_DOCUMENT_BYTES:
+        raise HTTPException(status_code=413, detail="Document is too large.")
+    try:
+        html = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="Document must be UTF-8 text.")
 
     #Keep only the edited body. The base tag added for displaying images is in the head, so it is left behind too.
     edited_body = find_body(html)
@@ -304,5 +318,13 @@ async def save_document(upload_id: str, request: Request):
         page = original[:original_body[0]] + "\n" + body + "\n" + original[original_body[1]:]
 
     #Save beside the generated page so the original in output/ is kept
-    (JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME).write_text(page, encoding="utf-8")
-    return {"status": "saved"}
+    #Write to a temporary file first, then swap it in, so a failed save never leaves a half written document
+    edited_path = JOBS_DIR / upload_id / EDITED_DOCUMENT_NAME
+    tmp = edited_path.with_name(f"{EDITED_DOCUMENT_NAME}.{uuid4().hex}.tmp")
+    try:
+        tmp.write_text(page, encoding="utf-8")
+        os.replace(tmp, edited_path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+    return get_document(upload_id)

@@ -1,17 +1,23 @@
 
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Button from '../../../components/ui/Button/Button.tsx'
 import { useAppState } from '../../../hooks/globalHook.ts'
 import { getDocument, saveDocument } from '../services/service.ts'
 
 export default function DocumentEditor() {
+    const navigate = useNavigate()
     const { result } = useAppState()
+    const uploadId = result?.upload_id
 
     // State to store the generated document
     const [documentHtml, setDocumentHtml] = useState('')
 
     // State to track if the document is being edited
     const [editing, setEditing] = useState(false)
+
+    // Changing the version reloads the iframe, which throws away unsaved edits
+    const [version, setVersion] = useState(0)
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -25,7 +31,8 @@ export default function DocumentEditor() {
 
     // Retrieve the generated document from the backend
     useEffect(() => {
-        if (!result) return
+        if (!uploadId) return
+        const documentId = uploadId
 
         let cancelled = false
 
@@ -34,7 +41,7 @@ export default function DocumentEditor() {
             setError('')
 
             try {
-                const html = await getDocument(result!.upload_id)
+                const html = await getDocument(documentId)
 
                 if (!cancelled) {
                     setDocumentHtml(html)
@@ -53,10 +60,29 @@ export default function DocumentEditor() {
         return () => {
             cancelled = true
         }
-    }, [result?.upload_id])
+    }, [uploadId])
+
+    // Warn before refreshing or closing the tab while there are unsaved edits
+    useEffect(() => {
+        if (!editing) return
+
+        function handleBeforeUnload(event: BeforeUnloadEvent) {
+            event.preventDefault()
+            // Older browsers need returnValue set to show the warning
+            event.returnValue = ''
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+        }
+    }, [editing])
 
     // Nothing to display if no video was uploaded
-    if (!result) return <p>No document available. Please upload a video first.</p>
+    if (!uploadId) return <p>No document available. Please upload a video first.</p>
+    // Keep the checked ID for the functions below, which TypeScript does not narrow
+    const documentId = uploadId
 
     // Enable or disable editing inside the iframe
     // Used the contentEditable property to allow the user to edit the document
@@ -80,11 +106,11 @@ export default function DocumentEditor() {
         setSaveError('')
     }
 
-    // Save the edited document to the backend
+    // Save the edited document to the backend and return whether it worked
     async function handleSave() {
         const doc = iframeRef.current?.contentDocument
 
-        if (!doc?.body || !result) return
+        if (!doc?.body) return false
 
         // Get the updated HTML from a copy of the page without contentEditable, so the saved document is not editable
         // The copy keeps the page on screen editable in case the save fails
@@ -97,26 +123,36 @@ export default function DocumentEditor() {
 
         try {
             // Send the edited document to FastAPI
-            await saveDocument(result.upload_id, html)
+            const savedHtml = await saveDocument(documentId, html)
 
-            // Keep the updated document
-            setDocumentHtml(html)
+            // Show the document the backend saved, since it removes anything unsafe
+            setDocumentHtml(savedHtml)
+            setVersion(previous => previous + 1)
             setEditable(false)
             setEditing(false)
+            return true
 
         } catch (error) {
             // Keep the document and edits on screen so the user can try saving again
             setSaveError(error instanceof Error ? error.message : 'Failed to save document')
+            return false
         } finally {
             setSaving(false)
         }
     }
 
-    // Open the saved document in a new tab
-    function handlePreview() {
-        if (!result) return
+    // Throw away unsaved edits by reloading the last saved document
+    function handleCancel() {
+        setEditing(false)
+        setSaveError('')
+        setVersion(previous => previous + 1)
+    }
 
-        window.open(`/api/documents/${result.upload_id}`, '_blank')
+    // Save any unsaved edits, then show the finished document
+    async function handleFinish() {
+        if (editing && !(await handleSave())) return
+
+        navigate('/preview')
     }
 
     return (
@@ -132,6 +168,7 @@ export default function DocumentEditor() {
             {!loading && !error && (
                 <>
                     <iframe
+                        key={version}
                         ref={iframeRef}
                         className="preview__document"
                         title="Generated documentation"
@@ -147,20 +184,25 @@ export default function DocumentEditor() {
                     <div className="document-editor__actions">
 
                         {!editing ? (
+                            <Button onClick={handleEdit}>
+                                Edit Document
+                            </Button>
+                        ) : (
                             <>
-                                <Button onClick={handleEdit}>
-                                    Edit Document
+                                <Button onClick={handleSave} disabled={saving}>
+                                    {saving ? 'Saving...' : 'Done Editing'}
                                 </Button>
 
-                                <Button onClick={handlePreview}>
-                                    View Saved Document
+                                <Button variant="secondary" onClick={handleCancel} disabled={saving}>
+                                    Cancel
                                 </Button>
                             </>
-                        ) : (
-                            <Button onClick={handleSave} disabled={saving}>
-                                {saving ? 'Saving...' : 'Done Editing'}
-                            </Button>
                         )}
+
+                        {/* Saves any unsaved edits before showing the finished document */}
+                        <Button onClick={handleFinish} disabled={saving}>
+                            Finish
+                        </Button>
 
                     </div>
                 </>
