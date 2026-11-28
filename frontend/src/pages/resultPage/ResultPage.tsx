@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import Button from '../../components/ui/Button/Button.tsx'
-import { downloadDocument } from '../../features/documentSaving/services/documentDownload.ts'
+import { downloadDocument } from '../../features/documentSaving/documentDownload'
 import { useAppState } from '../../hooks/globalHook.ts'
 
 export default function ResultPage() {
